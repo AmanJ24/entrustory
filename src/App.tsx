@@ -8,31 +8,33 @@ import { ActivityLog } from './pages/Logs/ActivityLog';
 import { TeamManagement } from './pages/Settings/TeamManagement';
 import { ApiConfig } from './pages/Settings/ApiConfig';
 import { AppLayout } from './components/layout/AppLayout';
+import { ProtectedRoute, PublicRoute } from './components/layout/AuthGuards';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<Login />} />
         
-        {/* We redirect root /app to dashboard */}
-        <Route path="/app" element={<AppLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          
-          {/* Nested Children Routes */}
-          <Route path="dashboard" element={<Dashboard />} />
-          
-          {/* If they click the Workspaces tab directly, send them to Dashboard to pick a file */}
-          <Route path="workspace" element={<Navigate to="/app/dashboard" replace />} />
-          {/* The actual detailed timeline route that needs an ID */}
-          <Route path="workspace/:id" element={<Workspace />} />
-          
-          <Route path="verify" element={<IntegrityCheck />} />
-          <Route path="logs" element={<ActivityLog />} />
-          <Route path="team" element={<TeamManagement />} />
-          <Route path="developer" element={<ApiConfig />} />
+        {/* PUBLIC ROUTES */}
+        <Route element={<PublicRoute />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<Login />} />
         </Route>
+        
+        {/* PROTECTED APP ROUTES */}
+        <Route path="/app" element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="workspace" element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="workspace/:id" element={<Workspace />} />
+            <Route path="verify" element={<IntegrityCheck />} /> {/* Moved inside App Layout! */}
+            <Route path="logs" element={<ActivityLog />} />
+            <Route path="team" element={<TeamManagement />} />
+            <Route path="developer" element={<ApiConfig />} />
+          </Route>
+        </Route>
+
       </Routes>
     </BrowserRouter>
   );

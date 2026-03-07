@@ -1,187 +1,343 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { supabase } from '../../utils/supabase';
+import { useAuth } from '../../hooks/useAuth';
+import { 
+  Loader2, X, Mail, Shield, UserX, 
+  MoreHorizontal, Fingerprint, CheckCircle, ArrowRight
+} from 'lucide-react';
+
+interface TeamMember {
+  workspace_id: string;
+  user_id: string;
+  email?: string; // Appended locally for UI
+  role: string;
+  public_key_fingerprint: string | null;
+  joined_at: string;
+}
 
 export const TeamManagement = () => {
-  return (
-    <div className="relative min-h-full font-['Space_Grotesk'] text-slate-100 bg-[#101f22] z-0">
-      {/* Background gradient decoration */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-[#162629] to-transparent pointer-events-none -z-10"></div>
+  const { user } = useAuth();
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+
+  // UI States
+  const [isInviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<'admin' | 'viewer'>('viewer');
+  const [inviteStatus, setInviteStatus] = useState<'idle' | 'sending' | 'success'>('idle');
+  
+  const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Fetch initial data
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!user) return;
+      try {
+        const { data: workspaceData } = await supabase
+          .from('workspace_members')
+          .select('workspace_id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .single();
+
+        if (workspaceData) {
+          setWorkspaceId(workspaceData.workspace_id);
+          const { data: membersData, error } = await supabase
+            .from('workspace_members')
+            .select('*')
+            .eq('workspace_id', workspaceData.workspace_id);
+          
+          if (error) throw error;
+          
+          // Map data and inject the current user's email for display
+          const mappedMembers = (membersData as TeamMember[]).map(m => ({
+            ...m,
+            email: m.user_id === user.id ? user.email : `user_${m.user_id.substring(0,5)}@external.com`
+          }));
+          
+          setMembers(mappedMembers);
+        }
+      } catch (err) {
+        console.error("Error fetching team members:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMembers();
+  }, [user]);
+
+  // Click outside handler to close action menus
+  useEffect(() => {
+    const handleClickOutside = () => setActiveActionMenu(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  // --- Actions ---
+
+  const handleInvite = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail) return;
+    
+    setInviteStatus('sending');
+    
+    // Simulating network request for MVP (Avoids Supabase Foreign Key crash on fake users)
+    setTimeout(() => {
+      const newMember: TeamMember = {
+        workspace_id: workspaceId || 'ws',
+        user_id: 'new_' + Math.random().toString(36).substr(2, 9),
+        email: inviteEmail,
+        role: inviteRole,
+        public_key_fingerprint: 'Pending acceptance...',
+        joined_at: new Date().toISOString()
+      };
       
-      <div className="max-w-[1200px] mx-auto p-6 md:p-12 flex flex-col gap-8 h-full">
+      setMembers([...members, newMember]);
+      setInviteStatus('success');
+      
+      setTimeout(() => {
+        setInviteModalOpen(false);
+        setInviteStatus('idle');
+        setInviteEmail('');
+        setInviteRole('viewer');
+      }, 1500);
+    }, 1000);
+  };
+
+  const handleRemoveMember = async (userIdToRemove: string) => {
+    if (window.confirm("Are you sure you want to remove this member? They will lose all access to cryptographic proofs.")) {
+      // Optimistic UI update
+      setMembers(members.filter(m => m.user_id !== userIdToRemove));
+      
+      // In production, execute: await supabase.from('workspace_members').delete().eq('user_id', userIdToRemove);
+    }
+  };
+
+  const handleChangeRole = (userIdToUpdate: string, newRole: string) => {
+    // Optimistic UI update
+    setMembers(members.map(m => m.user_id === userIdToUpdate ? { ...m, role: newRole } : m));
+    
+    // In production, execute: await supabase.from('workspace_members').update({ role: newRole }).eq('user_id', userIdToUpdate);
+  };
+
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  return (
+    <div className="relative min-h-full font-['Space_Grotesk'] text-slate-100 bg-[#0B1120] z-0">
+      <div className="max-w-[1200px] mx-auto p-6 md:p-12 flex flex-col gap-8 h-full pb-24">
         
         {/* Page Header */}
-        <div className="flex flex-wrap justify-between items-end gap-4 border-b border-[#2a4045] pb-6">
+        <div className="flex flex-wrap justify-between items-end gap-4 border-b border-slate-800 pb-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-white text-3xl font-bold tracking-tight">Workspace Members</h1>
-            <p className="text-[#9caeb3] text-base">Manage team access and control permissions for your Entrustory workspace.</p>
+            <p className="text-slate-400 text-base">Manage team access and cryptographic permissions for your workspace.</p>
           </div>
-          <button className="flex items-center gap-2 bg-[#0dccf2] hover:bg-[#0ab0d1] text-[#101f22] font-bold px-5 py-2.5 rounded-lg transition-all shadow-[0_0_15px_-3px_rgba(13,204,242,0.4)] hover:shadow-[0_0_20px_-3px_rgba(13,204,242,0.6)]">
+          <button 
+            onClick={() => setInviteModalOpen(true)}
+            className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-5 py-2.5 rounded-lg transition-all shadow-[0_0_15px_-3px_rgba(6,182,212,0.4)]"
+          >
             <span className="material-symbols-outlined text-xl">person_add</span>
             <span>Invite Member</span>
           </button>
         </div>
 
-        {/* Content Container */}
         <div className="flex flex-col gap-6">
-          
-          {/* Search & Filter Toolbar */}
-          <div className="flex flex-wrap gap-4 items-center justify-between">
-            <div className="relative w-full md:max-w-md">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#9caeb3]">search</span>
-              <input
-                type="text"
-                placeholder="Search by name, email or public key..."
-                className="w-full bg-[#162629] border border-[#2a4045] rounded-lg py-2.5 pl-10 pr-4 text-white placeholder-[#9caeb3] focus:outline-none focus:border-[#0dccf2] focus:ring-1 focus:ring-[#0dccf2] transition-all"
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2a4045] bg-[#162629] text-[#9caeb3] hover:text-white hover:border-[#9caeb3] transition-all">
-                <span className="material-symbols-outlined text-lg">filter_list</span>
-                <span className="text-sm font-medium">Filter</span>
-              </button>
-              <button className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2a4045] bg-[#162629] text-[#9caeb3] hover:text-white hover:border-[#9caeb3] transition-all">
-                <span className="material-symbols-outlined text-lg">download</span>
-                <span className="text-sm font-medium">Export</span>
-              </button>
-            </div>
-          </div>
-
           {/* Members Table */}
-          <div className="w-full overflow-hidden rounded-xl border border-[#2a4045] bg-[#101f22] shadow-xl">
-            <div className="overflow-x-auto">
+          <div className="w-full overflow-visible rounded-xl border border-slate-800 bg-[#111722] shadow-xl">
+            <div className="overflow-visible">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#162629] border-b border-[#2a4045]">
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#9caeb3] w-1/4">User</th>
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#9caeb3] w-1/6">Role</th>
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#9caeb3] w-1/3">Public Key Fingerprint</th>
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#9caeb3] text-right w-1/6">Actions</th>
+                  <tr className="bg-[#0B1120] border-b border-slate-800">
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400 w-1/4">User</th>
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400 w-1/6">Role</th>
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400 w-1/3">Public Key Fingerprint</th>
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400 text-right w-1/6">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#2a4045]">
-                  
-                  {/* Row 1 */}
-                  <tr className="group hover:bg-[#1e3236] transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-cover bg-center ring-1 ring-[#2a4045]" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuC5MebOgM_GuZZzNvVlQCjyQloCmNjw1kfzGUfZajy4aEdaPPeVvLnHJ7pCRP7Ih731DD6oFa9YJgzc3Bn44YrP0v3wNK1t2Rti8d3gcW4jUkHJklq4wC5DhTxMAmyGw3gQHU_OOhMqjlJSWoE5oFP5Gr8mR6oLnaogkz2w7gl0KwFC1XuaMNMc2kXgJmHi_x4OXNEbtG2A3gMewTUaOVYd44PdKZKiX7jNyjdstyuWAX5Ae0eijNNS4LY3hnC3ZrsM_DL2Dwu2GA")' }}></div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-white">Alice Chen</span>
-                          <span className="text-xs text-[#9caeb3]">alice@entrustory.com</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#0dccf2]/20 text-[#0dccf2] border border-[#0dccf2]/20">Owner</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 font-mono text-sm text-[#9caeb3] group-hover:text-[#0dccf2] transition-colors cursor-pointer" title="Click to copy">
-                        <span className="material-symbols-outlined text-base">fingerprint</span>
-                        <span>0x4f82...a1b2</span>
-                        <span className="material-symbols-outlined text-base opacity-0 group-hover:opacity-100 transition-opacity">content_copy</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button className="text-[#9caeb3] hover:text-white p-2 rounded-lg hover:bg-[#2a4045] transition-all">
-                        <span className="material-symbols-outlined">more_horiz</span>
-                      </button>
-                    </td>
-                  </tr>
+                <tbody className="divide-y divide-slate-800/50">
+                  {loading ? (
+                    <tr><td colSpan={4} className="p-8 text-center"><Loader2 className="animate-spin text-cyan-500 mx-auto" /></td></tr>
+                  ) : members.map((member) => {
+                    const isMe = member.user_id === user?.id;
+                    const isOwner = member.role === 'owner';
 
-                  {/* Row 2 */}
-                  <tr className="group hover:bg-[#1e3236] transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-cover bg-center ring-1 ring-[#2a4045]" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCjv_8d4wKw2ZhV3YD60SyEuKvwwqjYK7fXJKMjIOtTYwPjHPl7WAb7JEYDGEJZZhb6KP432FTLDFurfRnAWsOIJg14DANrS3OIonOs65YMk08aHhnxg7xn7I_K4_1BwrScRL28scAckFXP-zsV5z-3IYRhAb0YeT1tP6rZbXrD3ggjhilZfYZs6KmHseuuI4xTgiL9UcorzpgI3jls49D1GmPFbmUe45S8KgEqK_A_OZ3QMhC1KX9ZfGeHjgWdOZKL6AQtvMbx3A")' }}></div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-white">Bob Smith</span>
-                          <span className="text-xs text-[#9caeb3]">bob@entrustory.com</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/20">Admin</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 font-mono text-sm text-[#9caeb3] group-hover:text-[#0dccf2] transition-colors cursor-pointer" title="Click to copy">
-                        <span className="material-symbols-outlined text-base">fingerprint</span>
-                        <span>0x9c11...3d4e</span>
-                        <span className="material-symbols-outlined text-base opacity-0 group-hover:opacity-100 transition-opacity">content_copy</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button className="text-[#9caeb3] hover:text-white p-2 rounded-lg hover:bg-[#2a4045] transition-all">
-                        <span className="material-symbols-outlined">more_horiz</span>
-                      </button>
-                    </td>
-                  </tr>
+                    return (
+                      <tr key={member.user_id} className="group hover:bg-slate-800/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-full border flex items-center justify-center font-bold text-sm
+                              ${isMe ? 'bg-cyan-900 border-cyan-700 text-cyan-100' : 'bg-slate-800 border-slate-600 text-slate-300'}`}>
+                              {member.email?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium text-white flex items-center gap-2">
+                                {isMe ? 'You' : member.email?.split('@')[0]}
+                              </span>
+                              <span className="text-xs text-slate-500">{member.email}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+                            ${member.role === 'owner' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 
+                              member.role === 'admin' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 
+                              'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                            {member.role.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div 
+                            onClick={() => copyToClipboard(member.public_key_fingerprint || member.user_id, member.user_id)}
+                            className="flex items-center gap-2 font-mono text-sm text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer w-fit" 
+                            title="Click to copy"
+                          >
+                            {copiedId === member.user_id ? <CheckCircle size={16} className="text-emerald-400" /> : <Fingerprint size={16} />}
+                            <span>{member.public_key_fingerprint || `0x${member.user_id.split('-')[0]}...`}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right relative">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveActionMenu(activeActionMenu === member.user_id ? null : member.user_id);
+                            }}
+                            className="text-slate-500 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-all"
+                          >
+                            <MoreHorizontal size={20} />
+                          </button>
 
-                  {/* Row 3 */}
-                  <tr className="group hover:bg-[#1e3236] transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-[#0dccf2]/20 flex items-center justify-center text-[#0dccf2] font-bold text-xs ring-1 ring-[#2a4045]">CD</div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-white">Charlie Davis</span>
-                          <span className="text-xs text-[#9caeb3]">charlie@external.com</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#2a4045] text-[#9caeb3] border border-[#2a4045]">Viewer</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 font-mono text-sm text-[#9caeb3] group-hover:text-[#0dccf2] transition-colors cursor-pointer" title="Click to copy">
-                        <span className="material-symbols-outlined text-base">fingerprint</span>
-                        <span>0x1a77...5f6g</span>
-                        <span className="material-symbols-outlined text-base opacity-0 group-hover:opacity-100 transition-opacity">content_copy</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button className="text-[#9caeb3] hover:text-white p-2 rounded-lg hover:bg-[#2a4045] transition-all">
-                        <span className="material-symbols-outlined">more_horiz</span>
-                      </button>
-                    </td>
-                  </tr>
-
+                          {/* Dynamic Action Menu Dropdown */}
+                          {activeActionMenu === member.user_id && (
+                            <div 
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute right-8 top-10 mt-1 w-48 bg-[#111722] border border-slate-700 rounded-lg shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100"
+                            >
+                              {!isOwner && (
+                                <>
+                                  <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-800">Change Role</div>
+                                  <button onClick={() => { handleChangeRole(member.user_id, 'admin'); setActiveActionMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
+                                    <Shield size={14} className="text-purple-400" /> Make Admin
+                                  </button>
+                                  <button onClick={() => { handleChangeRole(member.user_id, 'viewer'); setActiveActionMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[14px] text-slate-400">visibility</span> Make Viewer
+                                  </button>
+                                  <div className="border-t border-slate-800 my-1"></div>
+                                  <button onClick={() => { handleRemoveMember(member.user_id); setActiveActionMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors">
+                                    <UserX size={14} /> Remove Member
+                                  </button>
+                                </>
+                              )}
+                              {isOwner && (
+                                <div className="p-3 text-xs text-slate-500 text-center">
+                                  Owner actions restricted. Transfer ownership first.
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-
-            {/* Pagination */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-[#2a4045] bg-[#162629]">
-              <span className="text-sm text-[#9caeb3]">Showing <span className="text-white font-medium">1-3</span> of <span className="text-white font-medium">12</span> members</span>
-              <div className="flex items-center gap-2">
-                <button className="flex items-center justify-center w-8 h-8 rounded hover:bg-[#2a4045] text-[#9caeb3] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                  <span className="material-symbols-outlined text-lg">chevron_left</span>
-                </button>
-                <button className="flex items-center justify-center w-8 h-8 rounded bg-[#0dccf2] text-[#101f22] font-bold text-sm">1</button>
-                <button className="flex items-center justify-center w-8 h-8 rounded hover:bg-[#2a4045] text-[#9caeb3] hover:text-white text-sm">2</button>
-                <button className="flex items-center justify-center w-8 h-8 rounded hover:bg-[#2a4045] text-[#9caeb3] hover:text-white">
-                  <span className="material-symbols-outlined text-lg">chevron_right</span>
-                </button>
-              </div>
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800 bg-[#0B1120]">
+              <span className="text-sm text-slate-400">Showing <span className="text-white font-medium">{members.length}</span> members</span>
             </div>
           </div>
 
-          {/* Invite Info Card (Bottom) */}
-          <div className="rounded-xl border border-dashed border-[#2a4045] bg-[#162629]/30 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          {/* Invite Info Card */}
+          <div className="rounded-xl border border-dashed border-slate-700 bg-slate-800/20 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mt-4">
             <div className="flex gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#0dccf2]/10 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#0dccf2] text-2xl">mail</span>
+              <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0 border border-cyan-500/20">
+                <span className="material-symbols-outlined text-cyan-400 text-2xl">mail</span>
               </div>
               <div className="flex flex-col gap-1">
                 <h3 className="text-white font-bold text-lg">Invite your team</h3>
-                <p className="text-[#9caeb3] text-sm max-w-lg">Collaborate securely by inviting your team members. You can assign specific roles and manage permissions at any time.</p>
+                <p className="text-slate-400 text-sm max-w-lg">Collaborate securely by inviting your team members. You can assign specific roles and manage permissions at any time.</p>
               </div>
             </div>
-            <button className="text-[#0dccf2] hover:text-white font-medium text-sm whitespace-nowrap flex items-center gap-1 group">
+            {/* Navigates to a future Docs page */}
+            <Link to="/docs/roles" className="text-cyan-400 hover:text-cyan-300 font-medium text-sm whitespace-nowrap flex items-center gap-1 group bg-cyan-500/10 px-4 py-2 rounded-lg border border-cyan-500/20 transition-all">
               Learn about roles
-              <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </button>
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
 
         </div>
       </div>
+
+      {/* --- INVITE MODAL --- */}
+      {isInviteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#111722] border border-slate-800 rounded-xl shadow-2xl w-full max-w-md p-6 relative">
+            <button onClick={() => setInviteModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <X size={20} />
+            </button>
+            
+            <h2 className="text-xl font-bold text-white mb-2 font-display">Invite Team Member</h2>
+            <p className="text-sm text-slate-400 mb-6">Send an encrypted invitation link to join this workspace.</p>
+
+            {inviteStatus === 'success' ? (
+              <div className="flex flex-col items-center justify-center py-8 text-emerald-400">
+                <CheckCircle size={48} className="mb-4 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                <h3 className="text-xl font-bold text-white">Invitation Sent</h3>
+                <p className="text-sm text-slate-400 mt-2 text-center">They have been added to the table as pending.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleInvite} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
+                  <div className="relative">
+                    <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input 
+                      type="email" required value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
+                      className="w-full bg-[#0B1120] border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-white outline-none focus:border-cyan-500"
+                      placeholder="colleague@company.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Workspace Role</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      type="button" onClick={() => setInviteRole('admin')} 
+                      className={`py-3 px-4 rounded-lg border text-sm transition-all flex flex-col items-center gap-1 ${inviteRole === 'admin' ? 'bg-purple-500/10 border-purple-500 text-purple-400' : 'bg-[#0B1120] border-slate-700 text-slate-400 hover:border-slate-500'}`}
+                    >
+                      <Shield size={18} />
+                      <span className="font-semibold">Admin</span>
+                    </button>
+                    <button 
+                      type="button" onClick={() => setInviteRole('viewer')} 
+                      className={`py-3 px-4 rounded-lg border text-sm transition-all flex flex-col items-center gap-1 ${inviteRole === 'viewer' ? 'bg-slate-700 border-slate-400 text-white' : 'bg-[#0B1120] border-slate-700 text-slate-400 hover:border-slate-500'}`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">visibility</span>
+                      <span className="font-semibold">Viewer</span>
+                    </button>
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" disabled={inviteStatus !== 'idle' || !inviteEmail}
+                  className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 mt-4"
+                >
+                  {inviteStatus === 'sending' ? <><Loader2 size={18} className="animate-spin" /> Sending...</> : 'Send Invitation'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
