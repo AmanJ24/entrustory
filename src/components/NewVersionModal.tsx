@@ -31,7 +31,18 @@ export const NewVersionModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, w
     try {
       // 1. Hash the file locally
       const fileHash = await calculateFileHash(file);
-      
+
+      const { data: duplicateCheck } = await supabase
+        .from('evidence_hashes')
+        .select('id')
+        .eq('sha256_hash', fileHash)
+        .maybeSingle();
+
+      if (duplicateCheck) {
+        setStatus('duplicate');
+        return; // Stop the process!
+      }
+
       // 2. Generate Merkle Root
       const merkleRoot = await generateMerkleRoot([fileHash]);
 

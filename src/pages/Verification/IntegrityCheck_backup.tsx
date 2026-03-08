@@ -1,12 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { calculateFileHash } from '../../utils/crypto';
 import { supabase } from '../../utils/supabase';
-import { verifyServerSignature } from '../../utils/serverSignature';
 import { ShieldAlert, Download, Code, Loader2, Search } from 'lucide-react';
-import { jsPDF } from 'jspdf';
+import { ed25519 } from '@noble/curves/ed25519';
+import { SERVER_PUBLIC_KEY_HEX, HexToBuffer } from '../../utils/serverSignature';
+
 
 export const IntegrityCheck = () => {
+  // --- New State for Tabs ---
   const [inputMode, setInputMode] = useState<'file' | 'hash'>('file');
+
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
@@ -15,6 +18,7 @@ export const IntegrityCheck = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [proofData, setProofData] = useState<any>(null);
   const [showJson, setShowJson] = useState(false);
+
   const [isSignatureValid, setIsSignatureValid] = useState<boolean | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,15 +39,7 @@ export const IntegrityCheck = () => {
     try {
       const { data, error } = await supabase
         .from('evidence_hashes')
-        .select(`
-          *,
-          versions (
-            version_tag,
-            merkle_root,
-            server_signature,
-            created_at
-          )
-        `)
+        .select(`*, versions (version_tag, merkle_root, server_signature, created_at)`)
         .eq('sha256_hash', hashToVerify)
         .maybeSingle();
 
@@ -54,15 +50,28 @@ export const IntegrityCheck = () => {
       } else {
         setProofData(data);
         
-        // Cryptographically verify the server signature
-        if (data.versions?.merkle_root && data.versions?.created_at && data.versions?.server_signature) {
-          const isValid = await verifyServerSignature(
-            data.versions.merkle_root,
-            data.versions.created_at,
-            data.versions.server_signature
-          );
-          setIsSignatureValid(isValid);
-        } else {
+        // --- NEW: MATHEMATICAL SIGNATURE VERIFICATION ---
+        try {
+          const root = data.versions?.merkle_root;
+          const timestamp = data.versions?.created_at;
+          const signatureHex = data.versions?.server_signature;
+
+          if (root && timestamp && signatureHex) {
+            // Reconstruct the exact message the server signed
+            const messageString = `${root}|${timestamp}`;
+            const messageBytes = new TextEncoder().encode(messageString);
+            
+            // Verify using the public key
+            const isValid = ed25519.verify(
+              HexToBuffer(signatureHex), 
+              messageBytes, 
+              HexToBuffer(SERVER_PUBLIC_KEY_HEX)
+            );
+            setIsSignatureValid(isValid);
+          } else {
+            setIsSignatureValid(false);
+          }
+        } catch (e) {
           setIsSignatureValid(false);
         }
 
@@ -74,6 +83,7 @@ export const IntegrityCheck = () => {
     }
   };
 
+  // --- UI Handlers ---
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); if (verificationStatus === 'idle') setIsDragging(true); };
   const handleDragLeave = () => { setIsDragging(false); };
   const handleDrop = async (e: React.DragEvent) => {
@@ -114,9 +124,9 @@ export const IntegrityCheck = () => {
     setProofData(null);
     setVerificationStatus('idle');
     setShowJson(false);
-    setIsSignatureValid(null);
   };
 
+  // Triggered when manually checking a pasted hash
   const handleManualCheck = () => {
     const cleanHash = searchQuery.trim().toLowerCase();
     if (cleanHash.length === 64) {
@@ -126,78 +136,31 @@ export const IntegrityCheck = () => {
     }
   };
 
-  const generatePdfCertificate = () => {
+  const generateCertificate = () => {
     if (!proofData) return;
+    const cert = {
+      issuer: "Entrustory OS Integrity Network",
+      timestamp_utc: proofData.created_at,
+      asset_name: proofData.file_name,
+      file_size_bytes: proofData.file_size,
+      cryptographic_proofs: {
+        algorithm: "SHA-256",
+        leaf_hash: proofData.sha256_hash,
+        merkle_root: proofData.versions?.merkle_root,
+        ed25519_signature: proofData.versions?.server_signature || "Pending Blockchain Anchor"
+      },
+      status: "CRYPTOGRAPHICALLY_VERIFIED"
+    };
 
-    const doc = new jsPDF();
-    
-    // Document styling
-    doc.setFillColor(11, 17, 32); // Dark background header
-    doc.rect(0, 0, 210, 40, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
-    doc.text("ENTRUSTORY", 20, 25);
-    
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text("DIGITAL INTEGRITY CERTIFICATE", 120, 25);
-
-    // Reset text color for body
-    doc.setTextColor(40, 40, 40);
-
-    // Section 1: Asset Details
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("1. Asset Information", 20, 60);
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`File Name: ${proofData.file_name}`, 20, 70);
-    doc.text(`File Size: ${formatBytes(proofData.file_size)}`, 20, 78);
-    doc.text(`Verification Timestamp: ${new Date().toUTCString()}`, 20, 86);
-
-    // Section 2: Cryptographic Proofs
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("2. Cryptographic Proofs", 20, 110);
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("Algorithm: SHA-256 (Zero-Knowledge Client-Side)", 20, 120);
-    
-    doc.setFont("courier", "bold");
-    doc.setFontSize(9);
-    doc.text(`Target Hash : ${proofData.sha256_hash}`, 20, 130);
-    doc.text(`Merkle Root : ${proofData.versions?.merkle_root}`, 20, 140);
-    
-    // Section 3: Ledger Authentication
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("3. Ledger Authentication", 20, 170);
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Anchored At (UTC): ${proofData.created_at}`, 20, 180);
-    
-    doc.setFont("courier", "normal");
-    doc.setFontSize(8);
-    const signature = proofData.versions?.server_signature || "Awaiting Signature";
-    // Split long signature into multiple lines to fit on PDF
-    const splitSignature = doc.splitTextToSize(`Server Signature: ${signature}`, 170);
-    doc.text(splitSignature, 20, 190);
-
-    // Footer
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, 270, 190, 270);
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(9);
-    doc.setTextColor(150, 150, 150);
-    doc.text("This certificate is mathematically verifiable via the Entrustory Network.", 20, 280);
-
-    // Save PDF
-    doc.save(`Entrustory_Proof_${proofData.sha256_hash.substring(0, 8)}.pdf`);
+    const blob = new Blob([JSON.stringify(cert, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `entrustory-proof-${proofData.sha256_hash.substring(0, 8)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const formatBytes = (bytes: number) => {
@@ -239,6 +202,7 @@ export const IntegrityCheck = () => {
           {/* Left Column: Upload / Input */}
           <div className="lg:col-span-5 space-y-6">
             
+            {/* FUNCTIONAL TABS */}
             <div className="flex bg-[#111722] p-1 rounded-lg w-full border border-slate-800">
               <button 
                 onClick={() => { setInputMode('file'); clearSelection(); }}
@@ -255,6 +219,7 @@ export const IntegrityCheck = () => {
             </div>
             
             {inputMode === 'file' ? (
+              /* --- MODE 1: FILE UPLOAD --- */
               <div 
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -285,6 +250,7 @@ export const IntegrityCheck = () => {
                     <p className="text-sm text-slate-400 mb-6">
                       {verificationStatus === 'success' ? 'Ledger Match Found' : 'No Match Found'}
                     </p>
+                    
                     <button onClick={(e) => { e.stopPropagation(); clearSelection(); }} className="w-full max-w-xs py-2.5 px-4 bg-slate-800 border border-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-700 transition-all text-sm">
                       Verify Another File
                     </button>
@@ -308,7 +274,9 @@ export const IntegrityCheck = () => {
                 )}
               </div>
             ) : (
+              /* --- MODE 2: DIRECT HASH INPUT --- */
               <div className="rounded-xl p-8 bg-[#111722] border border-slate-800 min-h-[300px] flex flex-col justify-center relative">
+                
                 {verificationStatus === 'processing' ? (
                    <div className="flex flex-col items-center">
                      <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
@@ -357,10 +325,12 @@ export const IntegrityCheck = () => {
                 )}
               </div>
             )}
+
           </div>
 
           {/* Right Column: Verification Result */}
           <div className="lg:col-span-7 relative">
+            
             {verificationStatus === 'idle' && (
               <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0B1120]/80 backdrop-blur-sm rounded-2xl border border-slate-800 border-dashed">
                 <span className="material-symbols-outlined text-4xl text-slate-600 mb-3">lock</span>
@@ -424,31 +394,27 @@ export const IntegrityCheck = () => {
                         <p className="mono-font text-sm text-slate-200 font-semibold">{safeDate(proofData?.created_at, 'iso')}</p>
                         <p className="text-xs text-slate-500 mt-1">DB Insertion Verified</p>
                       </div>
-                      <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
-                        <div className="flex items-center gap-2 mb-2 text-slate-400">
-                          <span className="material-symbols-outlined text-sm">key</span>
-                          <span className="text-xs font-bold uppercase tracking-wider">Server Signature</span>
-                        </div>
-                        <p className="mono-font text-xs text-slate-200 break-all leading-relaxed">
-                          {proofData?.versions?.server_signature ? 'hmac_sha256:signed' : 'Awaiting Signature'}
-                        </p>
-                        
-                        {/* THE MATH VERIFICATION RESULT */}
-                        {isSignatureValid === true && (
-                          <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px]">check_circle</span> 
-                            Math Verification Passed
-                          </p>
-                        )}
-                        {isSignatureValid === false && (
-                          <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px]">cancel</span> 
-                            Signature Tampered
-                          </p>
-                        )}
-                      </div>
+                   <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
+                    <div className="flex items-center gap-2 mb-2 text-slate-400">
+                      <span className="material-symbols-outlined text-sm">key</span>
+                      <span className="text-xs font-bold uppercase tracking-wider">Signer Public Key</span>
                     </div>
-                    
+                    <div className="flex items-center gap-2">
+                      <p className="mono-font text-xs text-slate-200 break-all leading-relaxed">
+                        ed25519:{SERVER_PUBLIC_KEY_HEX.substring(0, 24)}...
+                      </p>
+                    </div>
+                    {isSignatureValid ? (
+                      <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]">check_circle</span> Math Verification Passed
+                      </p>
+                    ) : (
+                      <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]">cancel</span> Signature Invalid
+                      </p>
+                    )}
+                  </div>
+
                     <div>
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="text-sm font-bold text-white uppercase tracking-wider">Merkle Path Validation</h4>
@@ -481,10 +447,10 @@ export const IntegrityCheck = () => {
                   </div>
                   
                   <div className="bg-slate-900/80 px-8 py-4 border-t border-slate-800 flex justify-between items-center">
-                  <button onClick={generatePdfCertificate} className="text-sm text-slate-400 hover:text-white flex items-center gap-2 transition-colors">
-                    <Download size={16} /> Download PDF Certificate
-                  </button>  
-                  <button onClick={() => setShowJson(true)} className="text-sm text-cyan-500 hover:text-cyan-400 font-medium transition-colors flex items-center gap-1">
+                    <button onClick={generateCertificate} className="text-sm text-slate-400 hover:text-white flex items-center gap-2 transition-colors">
+                      <Download size={16} /> Download Certificate
+                    </button>
+                    <button onClick={() => setShowJson(true)} className="text-sm text-cyan-500 hover:text-cyan-400 font-medium transition-colors flex items-center gap-1">
                       <Code size={16} /> View Raw JSON
                     </button>
                   </div>

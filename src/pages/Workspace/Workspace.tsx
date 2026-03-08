@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../utils/supabase';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Download } from 'lucide-react';
 import { NewVersionModal } from '../../components/NewVersionModal';
 
 export const Workspace = () => {
@@ -69,6 +69,29 @@ export const Workspace = () => {
   // Next tag calculation for the "Add Version" modal
   const nextVersionNum = (workItem.versions?.length || 0) + 1;
   const nextTag = `v${nextVersionNum}.0`;
+
+  const handleDownloadVaultFile = async () => {
+    if (!fileData?.storage_path) return;
+    
+    try {
+      // Get the file blob from Supabase Storage
+      const { data, error } = await supabase.storage.from('vault').download(fileData.storage_path);
+      if (error) throw error;
+
+      // Trigger browser download
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileData.file_name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download failed", err);
+      alert("Failed to download file from Vault.");
+    }
+  };
 
   return (
     <div className="min-h-full flex flex-col overflow-hidden font-sans text-[#E2E8F0] bg-[#0B0C10] relative">
@@ -138,6 +161,14 @@ export const Workspace = () => {
               </span>
             </div>
             <div className="flex items-center gap-3">
+              {fileData?.storage_path && (
+                <button 
+                  onClick={handleDownloadVaultFile} 
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white border border-slate-700 bg-slate-800 hover:bg-slate-700 rounded transition-colors"
+                >
+                  <Download size={14} /> Download Original
+                </button>
+              )}
               <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-[#0dccf2] hover:bg-cyan-400 text-[#0B1120] rounded transition-colors shadow-[0_0_15px_rgba(13,204,242,0.3)]">
                 <Plus size={14} /> Add New Version
               </button>

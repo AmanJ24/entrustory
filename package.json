@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@noble/curves": "^2.0.1",
     "@supabase/supabase-js": "^2.98.0",
     "clsx": "^2.1.1",
+    "jspdf": "^4.2.0",
     "lucide-react": "^0.575.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
