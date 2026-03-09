@@ -1,15 +1,109 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- Added this
+import { 
+  CheckCircle, Fingerprint, 
+  FileText, MoreVertical, TrendingUp, ShieldAlert, Loader2
+} from 'lucide-react';
+import { supabase } from '../../utils/supabase';
+
+// --- Types based on your SQL Schema ---
+interface WorkItem {
+  id: string;
+  name: string;
+  created_at: string;
+  versions: { version_tag: string }[];
+}
+
+interface AuditLog {
+  id: string;
+  action_type: string;
+  created_at: string;
+  details: any;
+  actor_id: string;
+}
+
+const [pendingAnchors, setPendingAnchors] = useState(0);
+
+// --- Helper to format "2 mins ago" ---
+const timeAgo = (dateString: string) => {
+  const seconds = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+};
 
 export const Dashboard = () => {
+  const navigate = useNavigate(); // <-- Initialized navigation
+  
+  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [totalProofs, setTotalProofs] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      // 1. Fetch WorkItems with their latest version tag
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('work_items')
+        .select(`
+          id, name, created_at,
+          versions ( version_tag )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (itemsError) throw itemsError;
+      setWorkItems(itemsData as WorkItem[]);
+
+      // 2. Fetch Total Proofs Count
+      const { count, error: countError } = await supabase
+        .from('versions')
+        .select('*', { count: 'exact', head: true });
+      
+      if (!countError) setTotalProofs(count || 0);
+
+      const { count: pendingCount } = await supabase
+        .from('versions')
+        .select('*', { count: 'exact', head: true })
+        .is('blockchain_anchor_id', null); // is null means it hasn't been batched yet!
+      
+      setPendingAnchors(pendingCount || 0);
+        
+      // 3. Fetch Recent Audit Logs
+      const { data: logsData, error: logsError } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (!logsError) setLogs(logsData as AuditLog[]);
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+
+    // Listen for the custom event fired by the "New WorkItem" modal
+    window.addEventListener('refresh_dashboard', fetchDashboardData);
+    return () => window.removeEventListener('refresh_dashboard', fetchDashboardData);
+  }, []);
+
   return (
-    // Replaced the h-screen container with a responsive padding container
     <div className="min-h-full font-['Inter'] bg-slate-50 text-slate-800 p-8">
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-6 max-w-[1600px] mx-auto">
         
         {/* Top Cards Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Card 1 */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 relative overflow-hidden group">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 relative overflow-hidden">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">System Health</h3>
@@ -35,60 +129,54 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Card 2 */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
             <div className="flex justify-between items-start mb-2">
               <div>
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Proofs</h3>
-                <p className="text-xs text-slate-400 mt-1">This billing cycle</p>
+                <p className="text-xs text-slate-400 mt-1">Secured records</p>
               </div>
               <span className="material-symbols-outlined text-blue-500 bg-blue-50 p-1.5 rounded-full">fingerprint</span>
             </div>
             <div className="flex items-end gap-2 mt-4">
-              <span className="text-3xl font-bold text-slate-900">2,845</span>
-              <span className="text-xs font-medium text-green-600 flex items-center mb-1">
-                <span className="material-symbols-outlined text-[14px]">trending_up</span>
-                +12%
+              <span className="text-3xl font-bold text-slate-900">
+                {loading ? <Loader2 className="animate-spin text-slate-300" /> : totalProofs}
+              </span>
+              {!loading && totalProofs > 0 && (
+                <span className="text-xs font-medium text-green-600 flex items-center mb-1">
+                  <TrendingUp size={14} className="mr-1" /> +1
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Pending Action Card */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Pending Anchors</h3>
+                <p className="text-xs text-slate-400 mt-1">Requires L4 processing</p>
+              </div>
+              <span className={`material-symbols-outlined p-1.5 rounded-full ${pendingAnchors > 0 ? 'text-amber-500 bg-amber-50' : 'text-emerald-500 bg-emerald-50'}`}>
+                {pendingAnchors > 0 ? 'pending_actions' : 'verified'}
+              </span>
+            </div>
+            <div className="flex items-end gap-2 mt-4">
+              <span className="text-3xl font-bold text-slate-900">
+                {loading ? <Loader2 className="animate-spin text-slate-300" /> : pendingAnchors}
+              </span>
+              <span className="text-xs text-slate-500 mb-1">
+                {pendingAnchors > 0 ? 'Awaiting batch transaction' : 'Blockchain synced'}
               </span>
             </div>
           </div>
 
-          {/* Card 3 */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Pending Verification</h3>
-                <p className="text-xs text-slate-400 mt-1">Requires attention</p>
-              </div>
-              <span className="material-symbols-outlined text-amber-500 bg-amber-50 p-1.5 rounded-full">pending_actions</span>
-            </div>
-            <div className="flex items-end gap-2 mt-4">
-              <span className="text-3xl font-bold text-slate-900">4</span>
-              <span className="text-xs text-slate-500 mb-1">Items awaiting signature</span>
-            </div>
-          </div>
-        </div>
-
         {/* Main Content Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Wide Table (Spans 2 columns) */}
+          {/* Left Table: Active WorkItems */}
           <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col h-[calc(100vh-280px)] min-h-[500px]">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
               <h2 className="text-lg font-semibold text-slate-800">Active WorkItems</h2>
-              <div className="flex gap-2">
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-2.5 top-2 text-slate-400 text-[18px]">search</span>
-                  <input 
-                    type="text" 
-                    placeholder="Search proofs..." 
-                    className="pl-9 pr-4 py-1.5 text-sm border border-slate-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none w-48 transition-all"
-                  />
-                </div>
-                <button className="p-1.5 text-slate-400 hover:bg-slate-50 rounded border border-slate-200">
-                  <span className="material-symbols-outlined text-[18px]">filter_list</span>
-                </button>
-              </div>
             </div>
             
             <div className="overflow-auto flex-1">
@@ -103,111 +191,96 @@ export const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  
-                  <tr className="hover:bg-slate-50 transition-colors group cursor-pointer">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-600">
-                          <span className="material-symbols-outlined text-[20px]">description</span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-slate-900">Q3 Financial Audit</div>
-                          <div className="text-xs text-slate-400">ID: wi_83js92kd</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">v2.4.1</span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-500">2 hours ago</td>
-                    <td className="px-6 py-4">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-50 text-emerald-700 border-emerald-200">
-                        <span className="material-symbols-outlined text-[16px] fill-1">verified_user</span> Verified
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button className="text-slate-400 hover:text-blue-600 p-1">
-                        <span className="material-symbols-outlined text-[20px]">more_vert</span>
-                      </button>
-                    </td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50 transition-colors group cursor-pointer">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded bg-orange-50 flex items-center justify-center text-orange-600">
-                          <span className="material-symbols-outlined text-[20px]">architecture</span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-slate-900">Project Alpha Blueprints</div>
-                          <div className="text-xs text-slate-400">ID: wi_29sk48xm</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">v1.0.0-rc2</span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-500">5 hours ago</td>
-                    <td className="px-6 py-4">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-amber-50 text-amber-700 border-amber-200">
-                        <span className="material-symbols-outlined text-[16px] fill-1">shield</span> Pending Anchor
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button className="text-slate-400 hover:text-blue-600 p-1">
-                        <span className="material-symbols-outlined text-[20px]">more_vert</span>
-                      </button>
-                    </td>
-                  </tr>
-
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-10 text-slate-400">
+                        <Loader2 className="animate-spin mx-auto mb-2" /> Loading ledger...
+                      </td>
+                    </tr>
+                  ) : workItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-10 text-slate-400">
+                        No WorkItems found. Click "+ New WorkItem" to secure a file.
+                      </td>
+                    </tr>
+                  ) : (
+                    workItems.map((item) => (
+                      <tr 
+                        key={item.id} 
+                        onClick={() => navigate(`/app/workspace/${item.id}`)} // <-- The fix is here
+                        className="hover:bg-slate-50 transition-colors group cursor-pointer"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-600">
+                              <FileText size={18} />
+                            </div>
+                            <div>
+                              <div className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors">{item.name}</div>
+                              <div className="text-xs text-slate-400 font-mono">ID: {item.id.split('-')[0]}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">
+                            {item.versions?.[0]?.version_tag || 'v1.0'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-slate-500">{timeAgo(item.created_at)}</td>
+                        <td className="px-6 py-4">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-50 text-emerald-700 border-emerald-200">
+                            <CheckCircle size={14} /> Verified
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button className="text-slate-400 hover:text-blue-600 p-1">
+                            <MoreVertical size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
-            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-xl flex items-center justify-between shrink-0">
-              <p className="text-xs text-slate-500">Showing 2 of 24 WorkItems</p>
-              <div className="flex gap-2">
-                <button className="px-3 py-1 text-xs border border-slate-200 bg-white rounded text-slate-600 hover:bg-slate-50">Previous</button>
-                <button className="px-3 py-1 text-xs border border-slate-200 bg-white rounded text-slate-600 hover:bg-slate-50">Next</button>
-              </div>
-            </div>
           </div>
 
-          {/* Side Feed */}
+          {/* Right Side: Activity Log Feed */}
           <div className="lg:col-span-1 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col h-[calc(100vh-280px)] min-h-[500px]">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
               <h2 className="text-lg font-semibold text-slate-800">Recent Activity</h2>
-              <button className="text-xs text-blue-600 hover:text-blue-700 font-medium">View All</button>
             </div>
             <div className="overflow-auto flex-1 p-6">
               <div className="relative border-l border-slate-200 ml-3 space-y-8">
-                
-                <div className="relative pl-8">
-                  <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white bg-blue-500 shadow-sm"></div>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-blue-600">VersionCreated</span>
-                      <span className="text-[10px] text-slate-400">2m ago</span>
-                    </div>
-                    <p className="text-sm text-slate-700 font-medium">New version added to "Q3 Financial Audit"</p>
-                    <div className="mt-1 flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-100">
-                      <span className="material-symbols-outlined text-slate-400 text-[16px]">fingerprint</span>
-                      <span className="text-[10px] font-mono text-slate-500 truncate w-32">SHA: 8f4a...9b2c</span>
-                    </div>
-                  </div>
-                </div>
+                {loading ? (
+                   <p className="text-center text-slate-400 mt-4 text-sm">Loading logs...</p>
+                ) : logs.length === 0 ? (
+                  <p className="text-center text-slate-400 mt-4 text-sm">No activity recorded yet.</p>
+                ) : (
+                  logs.map((log) => {
+                    let color = 'bg-slate-400';
+                    if (log.action_type === 'workitem_created') color = 'bg-emerald-500';
+                    if (log.action_type === 'workspace_created') color = 'bg-blue-500';
 
-                <div className="relative pl-8">
-                  <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow-sm"></div>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-emerald-600">WorkItemCreated</span>
-                      <span className="text-[10px] text-slate-400">25m ago</span>
-                    </div>
-                    <p className="text-sm text-slate-700 font-medium">"Project Alpha Blueprints" initialized</p>
-                    <p className="text-xs text-slate-500">Created by Sarah Connor</p>
-                  </div>
-                </div>
-
+                    return (
+                      <div key={log.id} className="relative pl-8">
+                        <div className={`absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white shadow-sm ${color}`}></div>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold capitalize text-slate-700">
+                              {log.action_type.replace('_', ' ')}
+                            </span>
+                            <span className="text-[10px] text-slate-400">{timeAgo(log.created_at)}</span>
+                          </div>
+                          <p className="text-sm text-slate-600 font-medium">
+                            {log.details?.message || `System executed: ${log.action_type}`}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-mono">ACTOR: {log.actor_id.split('-')[0]}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>

@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../../utils/supabase';
 import { Loader2, Plus, Download } from 'lucide-react';
 import { NewVersionModal } from '../../components/NewVersionModal';
+import { decryptFile } from '../../utils/crypto';
+import { Lock } from 'lucide-react';
 
 export const Workspace = () => {
   const { id } = useParams();
@@ -10,6 +12,56 @@ export const Workspace = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
+
+  const [downloadPassword, setDownloadPassword] = useState('');
+  const [isDecryptModalOpen, setIsDecryptModalOpen] = useState(false);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+
+  const triggerDownloadProcess = async () => {
+    if (!fileData?.storage_path) return;
+
+    if (fileData.is_encrypted) {
+      // If encrypted, open the password modal instead of downloading directly
+      setIsDecryptModalOpen(true);
+    } else {
+      // If plaintext, download normally
+      await executeDownload(false);
+    }
+  };
+
+  const executeDownload = async (isEncrypted: boolean) => {
+    try {
+      setIsDecrypting(true);
+      const { data, error } = await supabase.storage.from('vault').download(fileData.storage_path);
+      if (error || !data) throw error || new Error("Download failed");
+
+      let finalBlob = data;
+      
+      // Decrypt locally if necessary
+      if (isEncrypted) {
+        finalBlob = await decryptFile(data, downloadPassword);
+      }
+
+      // Trigger browser download
+      const url = URL.createObjectURL(finalBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileData.file_name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      setIsDecryptModalOpen(false);
+      setDownloadPassword('');
+    } catch (err: any) {
+      console.error("Download/Decrypt failed", err);
+      alert("Failed to decrypt. Incorrect password or corrupted file.");
+    } finally {
+      setIsDecrypting(false);
+    }
+  };
+
   // NEW: State to track which version the user is currently viewing
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
 
@@ -163,13 +215,13 @@ export const Workspace = () => {
             <div className="flex items-center gap-3">
               {fileData?.storage_path && (
                 <button 
-                  onClick={handleDownloadVaultFile} 
+                  onClick={triggerDownloadProcess} 
                   className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white border border-slate-700 bg-slate-800 hover:bg-slate-700 rounded transition-colors"
                 >
-                  <Download size={14} /> Download Original
+                  <Download size={14} /> Download {fileData.is_encrypted && <Lock size={12} className="ml-1 text-cyan-400" />}
                 </button>
-              )}
-              <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-[#0dccf2] hover:bg-cyan-400 text-[#0B1120] rounded transition-colors shadow-[0_0_15px_rgba(13,204,242,0.3)]">
+              )}  
+            <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-[#0dccf2] hover:bg-cyan-400 text-[#0B1120] rounded transition-colors shadow-[0_0_15px_rgba(13,204,242,0.3)]">
                 <Plus size={14} /> Add New Version
               </button>
             </div>
@@ -360,6 +412,33 @@ export const Workspace = () => {
         workspaceId={workItem.workspace_id}
         nextVersionTag={nextTag}
       />
+      {/* DECRYPT MODAL */}
+      {isDecryptModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#111722] border border-slate-800 rounded-xl shadow-2xl w-full max-w-sm p-6 relative">
+            <button onClick={() => {setIsDecryptModalOpen(false); setDownloadPassword('');}} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+              <Lock size={20} className="text-cyan-400" /> Encrypted Vault
+            </h2>
+            <p className="text-sm text-slate-400 mb-4">This file is encrypted. Enter the vault password to decrypt it locally.</p>
+            
+            <input 
+              type="password" value={downloadPassword} onChange={e => setDownloadPassword(e.target.value)}
+              placeholder="Vault Password"
+              className="w-full bg-[#0B1120] border border-slate-700 rounded-lg px-4 py-2.5 text-white outline-none focus:border-cyan-500 mb-4"
+            />
+            
+            <button 
+              onClick={() => executeDownload(true)} disabled={!downloadPassword || isDecrypting}
+              className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2"
+            >
+              {isDecrypting ? <><Loader2 size={16} className="animate-spin" /> Decrypting...</> : 'Unlock & Download'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

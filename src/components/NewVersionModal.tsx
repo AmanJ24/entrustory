@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { X, UploadCloud, Fingerprint, Loader2, AlertTriangle, Database } from 'lucide-react';
-import { calculateFileHash } from '../utils/crypto';
+import { X, UploadCloud, Fingerprint, Loader2, AlertTriangle, Database, Lock } from 'lucide-react';
+import { calculateFileHash, encryptFile } from '../utils/crypto';
 import { generateMerkleRoot } from '../utils/merkle';
 import { supabase } from '../utils/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -21,8 +21,12 @@ export const NewVersionModal: React.FC<Props> = ({
   const { user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [versionTag, setVersionTag] = useState(nextVersionTag);
-  const [storeInVault, setStoreInVault] = useState(false); // Vault State
-  const [status, setStatus] = useState<'idle' | 'hashing' | 'uploading' | 'saving' | 'success' | 'duplicate'>('idle');
+  
+  // Vault & Encryption State
+  const [storeInVault, setStoreInVault] = useState(false);
+  const [encryptionPassword, setEncryptionPassword] = useState('');
+  
+  const [status, setStatus] = useState<'idle' | 'hashing' | 'encrypting' | 'uploading' | 'saving' | 'success' | 'duplicate'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -30,13 +34,17 @@ export const NewVersionModal: React.FC<Props> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !user || !versionTag) return;
+    if (storeInVault && !encryptionPassword) {
+      alert("Please provide an encryption password for the Vault.");
+      return;
+    }
 
     setStatus('hashing');
     try {
-      // 1. Hash the file locally
+      // 1. Hash the ORIGINAL file locally
       const fileHash = await calculateFileHash(file);
 
-      // --- DUPLICATE PROOF DETECTION ---
+      // 2. Duplicate Detection
       const { data: duplicateCheck } = await supabase
         .from('evidence_hashes')
         .select('id')
@@ -48,18 +56,23 @@ export const NewVersionModal: React.FC<Props> = ({
         return; // Stop the process!
       }
       
-      // 2. Generate Merkle Root & Server Signature
+      // 3. Generate Merkle Root & Server Signature
       const merkleRoot = await generateMerkleRoot([fileHash]);
       const { signature, timestamp } = await generateServerSignature(merkleRoot);
 
-      // --- VAULT UPLOAD LOGIC ---
+      // --- VAULT LOGIC: ENCRYPT THEN UPLOAD ---
       let storagePath = null;
       if (storeInVault) {
+        setStatus('encrypting');
+        // Encrypt the file using the user's password
+        const encryptedBlob = await encryptFile(file, encryptionPassword);
+        
         setStatus('uploading');
-        const filePath = `${workspaceId}/${Date.now()}_${file.name}`;
+        // Upload the encrypted blob, not the plaintext file!
+        const filePath = `${workspaceId}/${Date.now()}_${file.name}.enc`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('vault')
-          .upload(filePath, file);
+          .upload(filePath, encryptedBlob, { contentType: 'application/octet-stream' });
           
         if (uploadError) throw uploadError;
         storagePath = uploadData.path;
@@ -67,7 +80,7 @@ export const NewVersionModal: React.FC<Props> = ({
 
       setStatus('saving');
 
-      // 3. Create New Version
+      // 4. Create New Version
       const { data: version, error: vError } = await supabase
         .from('versions')
         .insert([{ 
@@ -82,7 +95,7 @@ export const NewVersionModal: React.FC<Props> = ({
         .single();
       if (vError) throw vError;
 
-      // 4. Save Evidence Hash (including storage_path if vaulted)
+      // 5. Save Evidence Hash (including storage_path and is_encrypted flag)
       const { error: ehError } = await supabase
         .from('evidence_hashes')
         .insert([{ 
@@ -90,14 +103,15 @@ export const NewVersionModal: React.FC<Props> = ({
           file_name: file.name, 
           file_size: file.size, 
           sha256_hash: fileHash,
-          storage_path: storagePath
+          storage_path: storagePath,
+          is_encrypted: storeInVault
         }]);
       if (ehError) throw ehError;
 
-      // 5. Log Activity
+      // 6. Log Activity
       await supabase.from('audit_logs').insert([{ 
         workspace_id: workspaceId, actor_id: user.id, action_type: 'version_created', resource_id: version.id,
-        details: { message: `Version ${versionTag} anchored. (Vault: ${storeInVault ? 'Yes' : 'No'})` }
+        details: { message: `Version ${versionTag} anchored. Vaulted: ${storeInVault ? 'Yes' : 'No'}` }
       }]);
 
       setStatus('success');
@@ -107,6 +121,7 @@ export const NewVersionModal: React.FC<Props> = ({
         setStatus('idle');
         setFile(null);
         setStoreInVault(false);
+        setEncryptionPassword('');
       }, 1500);
 
     } catch (err: any) {
@@ -166,27 +181,42 @@ export const NewVersionModal: React.FC<Props> = ({
             </div>
 
             {/* VAULT TOGGLE */}
-            <div className="flex items-center justify-between p-3 rounded-lg border border-slate-700 bg-slate-800/30">
-              <div className="flex items-start gap-3">
-                <Database className={`mt-0.5 ${storeInVault ? 'text-cyan-400' : 'text-slate-500'}`} size={18} />
-                <div>
-                  <p className="text-sm font-medium text-white">Store in Vault</p>
-                  <p className="text-[10px] text-slate-400">Keep a secure copy of the file on our servers.</p>
+            <div className="flex flex-col gap-3 p-3 rounded-lg border border-slate-700 bg-slate-800/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-3">
+                  <Database className={`mt-0.5 ${storeInVault ? 'text-cyan-400' : 'text-slate-500'}`} size={18} />
+                  <div>
+                    <p className="text-sm font-medium text-white">Store in Vault</p>
+                    <p className="text-[10px] text-slate-400">Keep an AES-256 encrypted copy on our servers.</p>
+                  </div>
                 </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" checked={storeInVault} onChange={(e) => setStoreInVault(e.target.checked)} />
+                  <div className="w-9 h-5 bg-slate-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                </label>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" checked={storeInVault} onChange={(e) => setStoreInVault(e.target.checked)} />
-                <div className="w-9 h-5 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
-              </label>
+
+              {/* Password Input (Only shows if Vault is ON) */}
+              {storeInVault && (
+                <div className="relative animate-in fade-in slide-in-from-top-2">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                  <input 
+                    type="password" required={storeInVault} value={encryptionPassword} onChange={e => setEncryptionPassword(e.target.value)}
+                    placeholder="Enter an encryption password"
+                    className="w-full bg-[#0B1120] border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                  />
+                </div>
+              )}
             </div>
 
             <button 
               type="submit" disabled={status !== 'idle' || !file || !versionTag}
-              className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold py-3 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] flex items-center justify-center gap-2 mt-4 transition-all"
+              className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold py-3 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] flex items-center justify-center gap-2 mt-2 transition-all"
             >
               {status === 'hashing' && <><Loader2 size={18} className="animate-spin" /> Hashing locally...</>}
+              {status === 'encrypting' && <><Loader2 size={18} className="animate-spin" /> Encrypting AES-256...</>}
               {status === 'uploading' && <><Loader2 size={18} className="animate-spin" /> Uploading to Vault...</>}
-              {status === 'saving' && <><Loader2 size={18} className="animate-spin" /> Anchoring to database...</>}
+              {status === 'saving' && <><Loader2 size={18} className="animate-spin" /> Anchoring...</>}
               {status === 'idle' && <><Fingerprint size={18} /> Append Version</>}
             </button>
           </form>
