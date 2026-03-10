@@ -22,6 +22,8 @@ export const NewWorkItemModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
   const [encryptionPassword, setEncryptionPassword] = useState('');
   
   const [status, setStatus] = useState<'idle' | 'hashing' | 'encrypting' | 'uploading' | 'saving' | 'success' | 'duplicate'>('idle');
+  const [duplicateHash, setDuplicateHash] = useState('');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -44,9 +46,18 @@ export const NewWorkItemModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
       const fileHash = await calculateFileHash(file);
 
       // 2. Duplicate Detection
-      const { data: duplicateCheck } = await supabase.from('evidence_hashes').select('id').eq('sha256_hash', fileHash).maybeSingle();
-      if (duplicateCheck) { setStatus('duplicate'); return; }
-      
+      const { data: duplicateCheck } = await supabase
+        .from('evidence_hashes')
+        .select('id')
+        .eq('sha256_hash', fileHash)
+        .limit(1);
+
+      if (duplicateCheck && duplicateCheck.length > 0) {
+        setDuplicateHash(fileHash);
+        setStatus('duplicate'); 
+        return; 
+      }
+
       // 3. Merkle & Signature
       const merkleRoot = await generateMerkleRoot([fileHash]);
       const { signature, timestamp } = await generateServerSignature(merkleRoot);
