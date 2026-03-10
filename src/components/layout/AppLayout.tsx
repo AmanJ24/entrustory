@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { 
   Fingerprint, LayoutDashboard, Folders, ShieldCheck, 
-  History, Key, Users, Bell, Plus, Search, ChevronDown, LogOut, CheckCircle
+  History, Key, Users, Bell, Plus, Search, ChevronDown, LogOut, CheckCircle, CreditCard
 } from 'lucide-react';
+import { Settings as SettingsIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabase';
+
 
 interface WorkspaceData {
   name: string;
@@ -37,7 +39,9 @@ export const AppLayout = () => {
     { name: 'Verifier', icon: ShieldCheck, path: '/app/verify' },
     { name: 'Audit Log', icon: History, path: '/app/logs' },
     { name: 'API Config', icon: Key, path: '/app/developer' },
+    { name: 'Settings', icon: SettingsIcon, path: '/app/settings' },
     { name: 'Team Settings', icon: Users, path: '/app/team' },
+    { name: 'Billing', icon: CreditCard, path: '/app/billing' },
   ];
 
   // Fetch Header Data (Workspace Name & Recent Logs)

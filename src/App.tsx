@@ -9,6 +9,8 @@ import { TeamManagement } from './pages/Settings/TeamManagement';
 import { ApiConfig } from './pages/Settings/ApiConfig';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute, PublicRoute } from './components/layout/AuthGuards';
+import { Billing } from './pages/Settings/Billing';
+import { WorkspaceSettings } from './pages/Settings/WorkspaceSettings';
 
 function App() {
   return (
@@ -28,10 +30,12 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="workspace" element={<Navigate to="/app/dashboard" replace />} />
             <Route path="workspace/:id" element={<Workspace />} />
-            <Route path="verify" element={<IntegrityCheck />} /> {/* Moved inside App Layout! */}
+            <Route path="verify" element={<IntegrityCheck />} />
             <Route path="logs" element={<ActivityLog />} />
+            <Route path="settings" element={<WorkspaceSettings />} />
             <Route path="team" element={<TeamManagement />} />
             <Route path="developer" element={<ApiConfig />} />
+            <Route path="billing" element={<Billing />} />
           </Route>
         </Route>
 
