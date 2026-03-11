@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { calculateFileHash } from '../../utils/crypto';
 import { supabase } from '../../utils/supabase';
+import { formatBytes } from '../../utils/format';
 import { verifyServerSignature } from '../../utils/serverSignature';
 import { ShieldAlert, Download, Code, Loader2, Search } from 'lucide-react';
 import { jsPDF } from 'jspdf';
@@ -200,12 +201,7 @@ export const IntegrityCheck = () => {
     doc.save(`Entrustory_Proof_${proofData.sha256_hash.substring(0, 8)}.pdf`);
   };
 
-  const formatBytes = (bytes: number) => {
-    if (!bytes || bytes === 0) return '0 Bytes';
-    const k = 1024; const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+
 
   return (
     <div className="flex flex-col w-full font-['Inter'] bg-[#0B1120] text-slate-100 min-h-full">

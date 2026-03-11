@@ -1,34 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { 
-  Fingerprint, LayoutDashboard, Folders, ShieldCheck, 
-  History, Key, Users, Bell, Plus, Search, ChevronDown, LogOut, CheckCircle, CreditCard
+  Fingerprint, LayoutDashboard, Folders, ShieldCheck, DownloadCloud, 
+  History, Key, Users, Bell, Plus, Search, ChevronDown, LogOut, CreditCard, Settings as SettingsIcon
 } from 'lucide-react';
-import { Settings as SettingsIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabase';
+import { timeAgo } from '../../utils/format';
+import { NewWorkItemModal } from '../NewWorkItemModal';
+import type { AuditLog, WorkspaceData } from '../../types';
 
 
-interface WorkspaceData {
-  name: string;
-  role: string;
-}
 
 export const AppLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Dynamic Data States
+  // --- UI States ---
+  const [isModalOpen, setIsModalOpen] = useState(false); // <-- Re-added Modal State
   const [workspace, setWorkspace] = useState<WorkspaceData | null>(null);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<AuditLog[]>([]);
 
-  // Dropdown UI States
+  // Dropdown States
   const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState(false);
   const [isNotifMenuOpen, setIsNotifMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
-  // Refs for closing dropdowns when clicking outside
+  // Refs for closing dropdowns
   const workspaceRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -38,19 +37,18 @@ export const AppLayout = () => {
     { name: 'Workspaces', icon: Folders, path: '/app/workspace' },
     { name: 'Verifier', icon: ShieldCheck, path: '/app/verify' },
     { name: 'Audit Log', icon: History, path: '/app/logs' },
+    { name: 'Export', icon: DownloadCloud, path: '/app/export' },
     { name: 'API Config', icon: Key, path: '/app/developer' },
     { name: 'Settings', icon: SettingsIcon, path: '/app/settings' },
-    { name: 'Team Settings', icon: Users, path: '/app/team' },
+    { name: 'Team', icon: Users, path: '/app/team' },
     { name: 'Billing', icon: CreditCard, path: '/app/billing' },
   ];
 
-  // Fetch Header Data (Workspace Name & Recent Logs)
+  // Fetch Header Data
   useEffect(() => {
     const fetchHeaderData = async () => {
       if (!user) return;
-      
       try {
-        // 1. Get Workspace Info
         const { data: memberData } = await supabase
           .from('workspace_members')
           .select(`role, workspaces(id, name)`)
@@ -59,13 +57,10 @@ export const AppLayout = () => {
           .single();
 
         if (memberData && memberData.workspaces) {
-          // @ts-ignore - Supabase join typing
-          const wsName = memberData.workspaces.name;
-          setWorkspace({ name: wsName, role: memberData.role });
+          const ws = memberData.workspaces as unknown as { id: string; name: string };
+          setWorkspace({ name: ws.name, role: memberData.role });
 
-          // 2. Get Recent Notifications (Top 4 latest audit logs)
-          // @ts-ignore
-          const wsId = memberData.workspaces.id;
+          const wsId = ws.id;
           const { data: logs } = await supabase
             .from('audit_logs')
             .select('*')
@@ -81,13 +76,11 @@ export const AppLayout = () => {
     };
 
     fetchHeaderData();
-
-    // Listen for the custom event fired when a new WorkItem is uploaded to refresh notifications
     window.addEventListener('refresh_dashboard', fetchHeaderData);
     return () => window.removeEventListener('refresh_dashboard', fetchHeaderData);
   }, [user]);
 
-  // Handle clicking outside of dropdowns to close them
+  // Click outside listener
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (workspaceRef.current && !workspaceRef.current.contains(event.target as Node)) setIsWorkspaceMenuOpen(false);
@@ -103,16 +96,7 @@ export const AppLayout = () => {
     navigate('/login');
   };
 
-  // Helper for notification time
-  const timeAgo = (dateString: string) => {
-    const seconds = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 1000);
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
-  };
+
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0B1120] text-slate-300 font-sans">
@@ -120,7 +104,6 @@ export const AppLayout = () => {
       {/* --- TIER 1: Global Top Header --- */}
       <header className="h-14 bg-[#0B1120] border-b border-slate-800 flex items-center justify-between px-6 shrink-0 z-30">
         <div className="flex items-center gap-6">
-          {/* Brand */}
           <Link to="/app/dashboard" className="flex items-center gap-2 text-white font-['Space_Grotesk'] font-bold text-xl tracking-tight">
             <div className="text-cyan-400">
               <Fingerprint size={24} />
@@ -128,7 +111,6 @@ export const AppLayout = () => {
             Entrustory
           </Link>
 
-          {/* DYNAMIC: Workspace Context Switcher */}
           <div className="relative" ref={workspaceRef}>
             <div 
               onClick={() => setIsWorkspaceMenuOpen(!isWorkspaceMenuOpen)} 
@@ -143,7 +125,6 @@ export const AppLayout = () => {
               <ChevronDown size={14} className="text-slate-400" />
             </div>
 
-            {/* Workspace Dropdown */}
             {isWorkspaceMenuOpen && (
               <div className="absolute top-full left-0 mt-2 w-64 bg-[#111722] border border-slate-700 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="px-4 py-3 border-b border-slate-800">
@@ -177,14 +158,17 @@ export const AppLayout = () => {
             />
           </div>
           
-          <button className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+          {/* --- RE-WIRED: New WorkItem Button --- */}
+          <button 
+            onClick={() => setIsModalOpen(true)} 
+            className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+          >
             <Plus size={16} />
             New WorkItem
           </button>
           
           <div className="h-5 w-px bg-slate-800 mx-1"></div>
           
-          {/* DYNAMIC: Notifications Bell */}
           <div className="relative" ref={notifRef}>
             <button 
               onClick={() => setIsNotifMenuOpen(!isNotifMenuOpen)} 
@@ -196,7 +180,6 @@ export const AppLayout = () => {
               )}
             </button>
 
-          {/* Notifications Dropdown (Fixed & Expanded) */}
             {isNotifMenuOpen && (
               <div className="absolute top-full right-0 mt-3 w-96 bg-[#111722] border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="px-5 py-4 border-b border-slate-800 flex justify-between items-center bg-[#0B1120]">
@@ -221,7 +204,6 @@ export const AppLayout = () => {
                     </div>
                   ) : (
                     notifications.map(notif => {
-                      // Visual indicator color based on action type
                       const isCreate = notif.action_type.includes('create');
                       return (
                         <div key={notif.id} className="px-5 py-4 border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-default group">
@@ -237,7 +219,7 @@ export const AppLayout = () => {
                             </span>
                           </div>
                           <p className="text-sm text-slate-400 leading-relaxed ml-4">
-                            {notif.details?.message || `System executed: ${notif.action_type}`}
+                            {(notif.details as Record<string, string>)?.message || `System executed: ${notif.action_type}`}
                           </p>
                         </div>
                       );
@@ -248,7 +230,6 @@ export const AppLayout = () => {
             )}
           </div>
 
-          {/* DYNAMIC: User Profile Dropdown */}
           <div className="relative ml-2" ref={profileRef}>
             <div 
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
@@ -277,7 +258,7 @@ export const AppLayout = () => {
         </div>
       </header>
 
-      {/* --- TIER 2: GitHub-Style Navigation Tabs --- */}
+      {/* --- TIER 2: Navigation Tabs --- */}
       <div className="bg-[#111722] border-b border-slate-800 px-6 shrink-0 z-20 flex items-center">
         <nav className="flex items-center gap-2 overflow-x-auto pt-2">
           {navItems.map((item) => {
@@ -300,10 +281,17 @@ export const AppLayout = () => {
         </nav>
       </div>
 
-      {/* --- Main Content Injection via React Router Outlet --- */}
+      {/* --- Main Content Injection --- */}
       <main className="flex-1 flex flex-col min-w-0 relative overflow-y-auto bg-[#0B1120] z-10">
         <Outlet />
       </main>
+
+      {/* --- RE-ADDED: The Modal Component --- */}
+      <NewWorkItemModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={() => window.dispatchEvent(new Event('refresh_dashboard'))} 
+      />
     </div>
   );
 };

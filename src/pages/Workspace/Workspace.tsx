@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../utils/supabase';
-import { Loader2, Plus, Download, Lock } from 'lucide-react';
+import { Loader2, Plus, Download, Lock, X } from 'lucide-react';
 import { NewVersionModal } from '../../components/NewVersionModal';
 import { decryptFile } from '../../utils/crypto';
+import type { WorkItem } from '../../types';
 
 export const Workspace = () => {
   const { id } = useParams();
-  const [workItem, setWorkItem] = useState<any>(null);
+  const [workItem, setWorkItem] = useState<WorkItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);

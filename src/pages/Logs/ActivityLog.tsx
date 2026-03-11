@@ -1,16 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import { useAuth } from '../../hooks/useAuth';
+import { formatDateUTC } from '../../utils/format';
 import { Loader2 } from 'lucide-react';
-
-interface AuditLog {
-  id: string;
-  action_type: string;
-  created_at: string;
-  details: any;
-  actor_id: string;
-  resource_id: string;
-}
+import type { AuditLog } from '../../types';
 
 export const ActivityLog = () => {
   const { user } = useAuth();
@@ -37,10 +30,7 @@ export const ActivityLog = () => {
     fetchLogs();
   }, []);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toISOString().replace('T', ' ').substring(0, 19);
-  };
+
 
   const getActionStyles = (actionType: string) => {
     switch (actionType) {
@@ -90,7 +80,7 @@ export const ActivityLog = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <span className="material-symbols-outlined text-[16px] text-slate-400">schedule</span>
-                          <span className="text-sm font-medium text-slate-300">{formatDate(log.created_at)}</span>
+                          <span className="text-sm font-medium text-slate-300">{formatDateUTC(log.created_at)}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

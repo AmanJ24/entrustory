@@ -1,44 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  CheckCircle, Fingerprint, 
-  FileText, MoreVertical, TrendingUp, ShieldAlert, Loader2
+  CheckCircle, 
+  FileText, MoreVertical, TrendingUp, Loader2
 } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
+import { timeAgo } from '../../utils/format';
+import type { DashboardWorkItem, AuditLog } from '../../types';
 
-// --- Types based on your SQL Schema ---
-interface WorkItem {
-  id: string;
-  name: string;
-  created_at: string;
-  versions: { version_tag: string }[];
-}
 
-interface AuditLog {
-  id: string;
-  action_type: string;
-  created_at: string;
-  details: any;
-  actor_id: string;
-}
-
-// --- Helper to format "2 mins ago" ---
-const timeAgo = (dateString: string) => {
-  if (!dateString) return 'Just now';
-  const seconds = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-};
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   
   // State Management
-  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+  const [workItems, setWorkItems] = useState<DashboardWorkItem[]>([]);
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [totalProofs, setTotalProofs] = useState(0);
   const [pendingAnchors, setPendingAnchors] = useState(0);
@@ -58,7 +34,7 @@ export const Dashboard = () => {
         .limit(10);
       
       if (itemsError) throw itemsError;
-      setWorkItems(itemsData as WorkItem[]);
+      setWorkItems(itemsData as DashboardWorkItem[]);
 
       // 2. Fetch Total Proofs Count
       const { count: totalCount, error: countError } = await supabase
@@ -280,7 +256,7 @@ export const Dashboard = () => {
                             <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">{timeAgo(log.created_at)}</span>
                           </div>
                           <p className="text-sm text-slate-600 font-medium">
-                            {log.details?.message || `System executed: ${log.action_type}`}
+                            {(log.details as Record<string, string>)?.message || `System executed: ${log.action_type}`}
                           </p>
                           <p className="text-[10px] text-slate-400 font-mono mt-1">ACTOR: {log.actor_id?.split('-')[0]}</p>
                         </div>
