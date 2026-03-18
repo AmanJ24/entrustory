@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { formatBytes } from '../../utils/format';
 import { jsPDF } from 'jspdf';
+import toast from 'react-hot-toast';
 import { 
   FileCheck, Download, FileJson, FileText, 
   CheckCircle, Loader2, History, Link as LinkIcon, ShieldCheck
@@ -163,7 +164,7 @@ export const ExportCenter = () => {
 
     } catch (err) {
       console.error("Export failed:", err);
-      alert("Failed to generate export bundle.");
+      toast.error("Failed to generate export bundle.");
     } finally {
       setIsExporting(false);
     }

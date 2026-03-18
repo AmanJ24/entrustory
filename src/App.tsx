@@ -9,14 +9,20 @@ import { TeamManagement } from './pages/Settings/TeamManagement';
 import { WorkspaceSettings } from './pages/Settings/WorkspaceSettings';
 import { ApiConfig } from './pages/Settings/ApiConfig';
 import { Billing } from './pages/Settings/Billing';
-import { Documentation } from './pages/Docs/Documentation'; // NEW IMPORT
+import { Documentation } from './pages/Docs/Documentation';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute, PublicRoute } from './components/layout/AuthGuards';
 import { ExportCenter } from './pages/Export/ExportCenter';
+import { PublicVerify } from './pages/Verification/PublicVerify';
+import { StatusPage } from './pages/Status/StatusPage';
+import { CommandPalette } from './components/CommandPalette';
 
 function App() {
   return (
     <BrowserRouter>
+      {/* Global Command Palette — Cmd+K */}
+      <CommandPalette />
+
       <Routes>
         
         {/* PUBLIC ROUTES */}
@@ -25,8 +31,11 @@ function App() {
           <Route path="/login" element={<Login />} />
         </Route>
         
-        {/* STANDALONE ROUTES (Have their own specialized layout) */}
+        {/* STANDALONE PUBLIC ROUTES */}
         <Route path="/docs/*" element={<Documentation />} />
+        <Route path="/verify" element={<PublicVerify />} />
+        <Route path="/verify/:hash" element={<PublicVerify />} />
+        <Route path="/status" element={<StatusPage />} />
 
         {/* PROTECTED APP ROUTES */}
         <Route path="/app" element={<ProtectedRoute />}>

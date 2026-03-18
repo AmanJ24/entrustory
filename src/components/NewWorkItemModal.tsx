@@ -5,6 +5,7 @@ import { generateMerkleRoot } from '../utils/merkle';
 import { supabase } from '../utils/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { generateServerSignature } from '../utils/serverSignature';
+import toast from 'react-hot-toast';
 
 interface Props {
   isOpen: boolean;
@@ -32,7 +33,7 @@ export const NewWorkItemModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
     e.preventDefault();
     if (!file || !user || !projectName) return;
     if (storeInVault && !encryptionPassword) {
-      alert("Please provide an encryption password for the Vault.");
+      toast.error("Please provide an encryption password for the Vault.");
       return;
     }
 
@@ -60,7 +61,8 @@ export const NewWorkItemModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
 
       // 3. Merkle & Signature
       const merkleRoot = await generateMerkleRoot([fileHash]);
-      const { signature, timestamp } = await generateServerSignature(merkleRoot);
+      const timestamp = new Date().toISOString();
+      const signature = await generateServerSignature(merkleRoot, timestamp);
 
       // --- VAULT LOGIC: ENCRYPT THEN UPLOAD ---
       let storagePath = null;
@@ -100,7 +102,7 @@ export const NewWorkItemModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
       }, 1500);
 
     } catch (err: any) {
-      console.error(err); alert(`Failed: ${err.message}`); setStatus('idle');
+      console.error(err); toast.error(`Failed: ${err.message}`); setStatus('idle');
     }
   };
 

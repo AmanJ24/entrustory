@@ -4,6 +4,7 @@ import { supabase } from '../../utils/supabase';
 import { Loader2, Plus, Download, Lock, X } from 'lucide-react';
 import { NewVersionModal } from '../../components/NewVersionModal';
 import { decryptFile } from '../../utils/crypto';
+import toast from 'react-hot-toast';
 import type { WorkItem } from '../../types';
 
 export const Workspace = () => {
@@ -98,7 +99,7 @@ export const Workspace = () => {
       setDownloadPassword('');
     } catch (err: any) {
       console.error("Download/Decrypt failed", err);
-      alert("Failed to decrypt. Incorrect password or corrupted file.");
+      toast.error("Failed to decrypt. Incorrect password or corrupted file.");
     } finally {
       setIsDecrypting(false);
     }

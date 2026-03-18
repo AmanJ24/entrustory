@@ -3,6 +3,7 @@ import { supabase } from '../../utils/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import type { ApiKey } from '../../types';
+import toast from 'react-hot-toast';
 import { 
   X, Copy, AlertTriangle, Key, Terminal, Plus, 
   ExternalLink, CheckCircle, Activity, Shield, RefreshCw 
@@ -50,7 +51,7 @@ export const ApiConfig = () => {
     if (!newKeyName || !user) return;
     const rawKey = generateRawKey();
     const { error } = await supabase.from('api_keys').insert([{ name: newKeyName, key_value: rawKey, user_id: user.id, workspace_id: workspaceId }]);
-    if (error) { alert("Failed to create key."); return; }
+    if (error) { toast.error("Failed to create key."); return; }
     setRevealedKey(rawKey); setCreateModalOpen(false); setNewKeyName(''); fetchDashboardData();
   };
 
@@ -166,7 +167,7 @@ export const ApiConfig = () => {
             <section className="flex flex-col gap-4 mt-4">
               <div className="flex justify-between items-center px-1">
                 <h2 className="text-white text-xl font-bold font-display">Webhooks</h2>
-                <button onClick={() => alert("Webhook endpoint registration is managed via the CLI.")} className="flex items-center justify-center rounded-lg h-9 px-4 border border-slate-700 bg-[#111722] text-white hover:bg-slate-800 gap-2 text-sm font-bold transition-colors shadow-lg">
+                <button onClick={() => toast('Webhook endpoint registration is managed via the CLI.', { icon: '⚙️' })} className="flex items-center justify-center rounded-lg h-9 px-4 border border-slate-700 bg-[#111722] text-white hover:bg-slate-800 gap-2 text-sm font-bold transition-colors shadow-lg">
                   <Plus size={16} /> Add Endpoint
                 </button>
               </div>

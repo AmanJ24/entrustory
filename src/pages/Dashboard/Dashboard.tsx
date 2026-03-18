@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
 import { timeAgo } from '../../utils/format';
+import { useCountUp } from '../../hooks/useCountUp';
+import { TableRowSkeleton } from '../../components/ui/Skeleton';
 import type { DashboardWorkItem, AuditLog } from '../../types';
 
 
@@ -19,6 +21,10 @@ export const Dashboard = () => {
   const [totalProofs, setTotalProofs] = useState(0);
   const [pendingAnchors, setPendingAnchors] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // Animated counters
+  const animatedProofs = useCountUp(totalProofs);
+  const animatedAnchors = useCountUp(pendingAnchors);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -120,7 +126,7 @@ export const Dashboard = () => {
             </div>
             <div className="flex items-end gap-2 mt-4">
               <span className="text-3xl font-bold text-slate-900">
-                {loading ? <Loader2 className="animate-spin text-slate-300" /> : totalProofs}
+                {loading ? <Loader2 className="animate-spin text-slate-300" /> : animatedProofs}
               </span>
               {!loading && totalProofs > 0 && (
                 <span className="text-xs font-medium text-emerald-600 flex items-center mb-1">
@@ -143,7 +149,7 @@ export const Dashboard = () => {
             </div>
             <div className="flex items-end gap-2 mt-4">
               <span className="text-3xl font-bold text-slate-900">
-                {loading ? <Loader2 className="animate-spin text-slate-300" /> : pendingAnchors}
+                {loading ? <Loader2 className="animate-spin text-slate-300" /> : animatedAnchors}
               </span>
               <span className="text-xs text-slate-500 mb-1">
                 {pendingAnchors > 0 ? 'Awaiting batch transaction' : 'Blockchain synced'}
@@ -174,11 +180,7 @@ export const Dashboard = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {loading ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-10 text-slate-400">
-                        <Loader2 className="animate-spin mx-auto mb-2" /> Loading ledger...
-                      </td>
-                    </tr>
+                    <TableRowSkeleton columns={5} rows={5} />
                   ) : workItems.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="text-center py-10 text-slate-400">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import { useAuth } from '../../hooks/useAuth';
+import toast from 'react-hot-toast';
 import { 
   Building2, ShieldCheck, Key, Bell, Globe, 
   Loader2, X, AlertTriangle, CheckCircle, 
@@ -65,7 +66,7 @@ export const WorkspaceSettings = () => {
         window.dispatchEvent(new Event('refresh_dashboard')); 
       }, 600);
     } catch (err: any) {
-      alert(`Failed to save: ${err.message}`);
+      toast.error(`Failed to save: ${err.message}`);
       setIsSaving(false);
     }
   };
@@ -76,13 +77,13 @@ export const WorkspaceSettings = () => {
   const removeIp = (ip: string) => { setIpWhitelist(ipWhitelist.filter(i => i !== ip)); };
 
   // --- NEW: Mock Action Handlers ---
-  const handleTransferOwnership = () => alert("An email has been sent to your registered address to securely initiate the ownership transfer.");
+  const handleTransferOwnership = () => toast.success("An email has been sent to your registered address to securely initiate the ownership transfer.");
   const handleDeleteWorkspace = () => {
     const confirm = window.prompt("WARNING: This will permanently delete all cryptographic records and vaults. Type your workspace name to confirm.");
-    if (confirm === workspaceName) alert("Workspace deletion scheduled.");
+    if (confirm === workspaceName) toast.success("Workspace deletion scheduled.");
   };
-  const handleConnectSSO = () => alert("SSO Configuration requires an Enterprise SLA. Please contact support.");
-  const handleConnectS3 = () => alert("Redirecting to AWS IAM Identity Center for authorization...");
+  const handleConnectSSO = () => toast('SSO Configuration requires an Enterprise SLA. Please contact support.', { icon: '🏢' });
+  const handleConnectS3 = () => toast.success("Redirecting to AWS IAM Identity Center for authorization...");
 
   if (loading) return <div className="min-h-full flex items-center justify-center bg-[#0B1120]"><Loader2 className="animate-spin text-cyan-500 w-8 h-8" /></div>;
 

@@ -5,6 +5,7 @@ import { formatBytes } from '../../utils/format';
 import { verifyServerSignature } from '../../utils/serverSignature';
 import { ShieldAlert, Download, Code, Loader2, Search } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import toast from 'react-hot-toast';
 
 export const IntegrityCheck = () => {
   const [inputMode, setInputMode] = useState<'file' | 'hash'>('file');
@@ -104,7 +105,7 @@ export const IntegrityCheck = () => {
       await verifyHashAgainstLedger(hash);
     } catch (error) {
       console.error("Hashing failed:", error);
-      alert("Failed to process file.");
+      toast.error("Failed to process file.");
       setVerificationStatus('idle');
     }
   };
@@ -123,7 +124,7 @@ export const IntegrityCheck = () => {
     if (cleanHash.length === 64) {
       verifyHashAgainstLedger(cleanHash);
     } else {
-      alert("Please enter a valid 64-character SHA-256 hash.");
+      toast.error("Please enter a valid 64-character SHA-256 hash.");
     }
   };
 

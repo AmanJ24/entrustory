@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Fingerprint as FingerprintIcon, Mail, Lock, ArrowRight, Shield } from 'lucide-react';
-import { supabase } from '../../utils/supabase'; // Import our client
+import { supabase } from '../../utils/supabase';
+import toast from 'react-hot-toast';
 
 export const Login = () => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -25,7 +26,7 @@ export const Login = () => {
           password,
         });
         if (error) throw error;
-        alert("Account created! (If email confirmation is on in Supabase, check your inbox).");
+        toast.success("Account created! Check your inbox if email confirmation is enabled.");
         // Automatically switch to sign in mode after successful signup
         setMode('signin'); 
       } else {
