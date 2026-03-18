@@ -1,153 +1,233 @@
-# 🛡️ Entrustory OS
-**Digital Integrity & Ownership Infrastructure Platform**
+<p align="center">
+  <img src="https://img.shields.io/badge/Entrustory-Digital%20Integrity%20OS-0B1120?style=for-the-badge&labelColor=0B1120" alt="Entrustory" />
+</p>
 
-![React](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
-![Cryptography](https://img.shields.io/badge/Crypto-Web%20Crypto%20API-A855F7?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-MVP%20Completed-10B981?style=for-the-badge)
+<h1 align="center">🛡️ Entrustory</h1>
+<p align="center"><strong>Programmable, Zero-Knowledge Digital Integrity Infrastructure</strong></p>
 
-Entrustory is a programmable, zero-knowledge digital integrity platform designed to provide verifiable, tamper-evident, version-aware proof of digital work and activity. 
+<p align="center">
+  <img src="https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vite_7-646CFF?style=flat-square&logo=vite&logoColor=white" />
+  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" />
+  <img src="https://img.shields.io/badge/Ed25519-A855F7?style=flat-square&logo=letsencrypt&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" />
+</p>
 
-Unlike traditional static timestamping services, Entrustory operates as a **Continuous Lifecycle Integrity Engine**, embedding trust directly into digital workflows for developers, legal teams, and enterprises.
-
----
-
-## 👥 Academic Project Details
-* **University:** Jaipur National University (School of Computer and Systems Sciences)
-* **Project Guide:** Dr. Sunil Gupta (Head of Department)
-* **Team Leader:** Aman Jangir 
-* **Team Members:** Devyani Sharma, Harshwardhan Singh Chauhan 
-
----
-
-## 📖 Table of Contents
-- [The Problem & Our Solution](#-the-problem--our-solution)
-- [Core Architecture & Layers](#-core-architecture--layers)
-- [Features](#-key-features)
-- [Tech Stack](#-tech-stack)
-- [Local Setup & Installation](#-local-setup--installation)
-- [Database & Security Model](#-database--security-model)
-- [Developer CLI Usage](#-developer-cli--api)
-- [Future Scaling Roadmap](#-future-scaling-roadmap)
+<p align="center">
+  <em>Tamper-evident, version-aware proof of digital work — anchored to cryptographic truth.</em>
+</p>
 
 ---
 
-## 🎯 The Problem & Our Solution
+## What is Entrustory?
 
-**The Gap:** Current digital notarization platforms rely on one-time, static certificates. When an asset updates, the proof is broken. They also lack API programmability, team collaboration, and zero-knowledge privacy.
+Entrustory is a **Continuous Lifecycle Integrity Engine** — not just a timestamp service. It embeds cryptographic proof directly into digital workflows, creating an unbroken chain of trust for every version of every file across its entire lifecycle.
 
-**The Solution:** Entrustory upgrades timestamping into an Operating System. By combining client-side hashing, deterministic Merkle trees, append-only databases, and blockchain batching, Entrustory creates an unbroken, cryptographically secure lineage for any digital file across its entire lifecycle.
+```
+📄 File → SHA-256 Hash → Merkle Tree → Ed25519 Signature → Blockchain Anchor
+         (client-side)     (O(log n))    (server-side)       (batch cron)
+```
 
----
+**The Problem:** Existing digital notarization platforms produce static, one-time certificates. When a file updates, the proof is broken. They lack programmability, team collaboration, and privacy.
 
-## 🏗️ Core Architecture & Layers
-
-Entrustory utilizes a **Multi-Layer Assurance Model** to guarantee absolute trust:
-
-* **Layer 1: Zero-Knowledge Client:** Files are hashed (SHA-256) locally in the browser. Raw data never leaves the user's device unless explicitly placed in the Encrypted Vault.
-* **Layer 2: Merkle Tree Engine:** Hashes are lexicographically sorted and grouped into deterministic Merkle Trees, allowing O(log n) scalable inclusion proofs.
-* **Layer 3: Server-Side Signatures:** The backend signs the Merkle Root and exact UTC timestamp using HMAC-SHA256 / Ed25519 to prove server-side attestation.
-* **Layer 4: Blockchain Anchoring:** A cron job batches pending Merkle Roots into a single "Super Root" and anchors it to a public blockchain (e.g., Ethereum Sepolia) for decentralized, trustless verification.
+**Our Solution:** A four-layer assurance model that guarantees integrity from the browser to the blockchain — with zero knowledge of the original content.
 
 ---
 
-## ✨ Key Features
+## Architecture
 
-* **Client-Side Hashing & Duplicate Detection:** Instantly detects if an exact binary match of a file already exists on the network.
-* **Zero-Knowledge Encrypted Vault:** Users can opt to store files on Entrustory servers. Files are encrypted client-side using `AES-256-GCM` before upload.
-* **Immutable Audit Log:** Granular tracking of all workspace events (WorkItem creation, API access, export generation).
-* **Version-Aware Timelines:** Visually track the lineage of an asset from v1.0 to vX.0 with direct cryptographic comparison.
-* **Legal-Ready Evidence Exports:** Generate multi-page, professional PDF certificates containing hashes, roots, and signatures for auditors.
-* **Role-Based Access Control (RBAC):** Invite team members and assign Owner, Admin, or Viewer permissions.
-* **Public Verification Portal:** Anyone can drag-and-drop a file to mathematically verify its existence on the ledger.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  LAYER 4  │  Blockchain Anchoring                               │
+│           │  Batch Merkle Roots → Super Root → Public Chain     │
+├───────────┼─────────────────────────────────────────────────────┤
+│  LAYER 3  │  Server Signatures                                  │
+│           │  Ed25519 asymmetric signing via Supabase Edge Fn    │
+├───────────┼─────────────────────────────────────────────────────┤
+│  LAYER 2  │  Merkle Tree Engine                                 │
+│           │  Deterministic, lexicographically sorted trees       │
+├───────────┼─────────────────────────────────────────────────────┤
+│  LAYER 1  │  Zero-Knowledge Client                              │
+│           │  SHA-256 hashing in-browser · No data leaves device │
+└───────────┴─────────────────────────────────────────────────────┘
+```
+
+| Layer | What it guarantees | How |
+|-------|-------------------|-----|
+| **L1** | Content privacy | Files are hashed locally via Web Crypto API. Raw data never touches the server. |
+| **L2** | Scalable proof | Hashes form a Merkle Tree with O(log n) inclusion proofs. |
+| **L3** | Server attestation | The Merkle root is signed with Ed25519 (via `@noble/curves`) with an exact UTC timestamp. |
+| **L4** | Decentralized trust | A cron job batches pending roots into a Super Root and anchors it on-chain. |
 
 ---
 
-## 💻 Tech Stack
+## Features
 
-* **Frontend UI:** React 18, Vite, TypeScript, Tailwind CSS
-* **Icons:** Lucide React, Google Material Symbols
-* **Cryptography:** Native Browser Web Crypto API (`crypto.subtle`)
-* **Backend / Database:** Supabase (PostgreSQL)
-* **Auth:** Supabase Auth (JWT)
-* **Storage:** Supabase Storage Buckets
-* **PDF Generation:** `jspdf`
+| Feature | Description |
+|---------|-------------|
+| 🔐 **Client-Side Hashing** | SHA-256 computed entirely in-browser. Instant duplicate detection across the ledger. |
+| 🗄️ **Encrypted Vault** | Optional AES-256-GCM encrypted storage. Files encrypted client-side before upload. |
+| 📜 **Immutable Audit Log** | Every workspace event tracked — creation, access, export, API calls. |
+| 🔄 **Version Timelines** | Visual lineage from v1.0 → vN.0 with per-version cryptographic proofs. |
+| 📄 **PDF Certificates** | Legal-grade evidence exports with hashes, Merkle paths, signatures, and QR codes. |
+| 👥 **RBAC & Teams** | Invite members with Owner / Admin / Viewer roles per workspace. |
+| 🌐 **Public Verification** | Anyone can verify a file at `/verify/:hash` — no account needed. Shareable proof URLs. |
+| ⌨️ **Command Palette** | `Cmd+K` to navigate anywhere — fuzzy search, keyboard shortcuts. |
+| 📊 **System Status** | Public `/status` page with real-time latency checks and 90-day uptime chart. |
+| 🔔 **Toast Notifications** | Polished feedback for every action via `react-hot-toast`. |
+| 🤖 **GitHub Action** | CI/CD template to anchor every build artifact to the ledger automatically. |
 
 ---
 
-## 🚀 Local Setup & Installation
+## Tech Stack
 
-### 1. Clone the repository
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React 19, TypeScript, Vite 7, Tailwind CSS |
+| **Backend** | Supabase (PostgreSQL, Auth, Storage, Edge Functions) |
+| **Cryptography** | Web Crypto API (SHA-256, AES-256-GCM), `@noble/curves` (Ed25519) |
+| **PDF/QR** | jsPDF, qrcode |
+| **CLI** | Node.js (ES Modules) |
+| **CI/CD** | GitHub Actions |
+
+---
+
+## Project Structure
+
+```
+entrustory/
+├── entrustory-web/          # React SPA
+│   ├── src/
+│   │   ├── components/      # CommandPalette, Skeleton, Modals, Layout
+│   │   ├── hooks/           # useAuth, useCountUp
+│   │   ├── pages/           # Dashboard, Workspace, Verify, Status, Settings
+│   │   ├── types/           # Shared TypeScript interfaces
+│   │   └── utils/           # crypto, merkle, serverSignature, format
+│   └── index.html
+├── entrustory-cli/          # Headless Node.js CLI
+│   ├── cli.js               # Hash & anchor any file from terminal
+│   └── anchor-cron.js       # Batch blockchain anchoring script
+├── supabase/
+│   └── functions/
+│       └── sign-merkle-root/ # Edge Function for server-side Ed25519 signing
+├── .github/
+│   └── workflows/
+│       └── entrustory-anchor.yml  # CI/CD anchor action
+└── OTHER/
+    └── supabase_schema.sql  # Full database schema with RLS & triggers
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js ≥ 18
+- A [Supabase](https://supabase.com) project (free tier works)
+
+### 1. Clone & Install
+
 ```bash
 git clone https://github.com/AmanJ24/entrustory.git
 cd entrustory
-```
 
-### 2. Install Dependencies
-```bash
+# Web app
+cd entrustory-web
+npm install
+
+# CLI (optional)
+cd ../entrustory-cli
 npm install
 ```
 
-### 3. Environment Variables
-Create a `.env.local` file in the root directory and add your Supabase credentials:
+### 2. Configure Environment
+
+Create `entrustory-web/.env.local`:
+
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-public-key
 ```
 
-### 4. Run the Development Server
-```bash
-npm run dev
-```
+For the CLI, create `entrustory-cli/.env`:
 
----
-
-## 🗄️ Database & Security Model
-
-Entrustory relies on extreme database-level security. 
-
-**1. Row-Level Security (RLS)**
-Every table (`workspaces`, `work_items`, `versions`, `evidence_hashes`, `audit_logs`) is secured with RLS. Users can only read/write data linked to their specific `workspace_id`.
-
-**2. Strict Append-Only Triggers**
-We utilize custom PostgreSQL PL/pgSQL triggers to prevent tampering. If a malicious actor (or developer) attempts to `UPDATE` or `DELETE` a cryptographic record, the database throws a fatal error:
-> *"Entrustory Integrity Protocol: Modification of core cryptographic properties is strictly prohibited."*
-
----
-
-## 🛠️ Developer CLI & API
-
-Entrustory includes a headless Node.js CLI script, demonstrating our API-First architecture.
-
-### Setup CLI
-Navigate to the `entrustory-cli` directory and configure the `.env`:
 ```env
 SUPABASE_URL=https://your-project-id.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 ENTRUSTORY_API_KEY=pk_live_your_generated_key_from_dashboard
 ```
 
-### Usage
-Run the CLI against any local file to secure it to the ledger via terminal:
+### 3. Set Up the Database
+
+Import the schema into your Supabase project:
+
 ```bash
-node cli.js ./my-secret-document.pdf
+# Via Supabase Dashboard → SQL Editor → paste contents of:
+cat OTHER/supabase_schema.sql
 ```
-*The CLI hashes the file locally, verifies your API key via a secure Postgres RPC function, and anchors the proof instantly.*
+
+### 4. Run
+
+```bash
+cd entrustory-web
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173).
+
+### 5. CLI Usage
+
+```bash
+cd entrustory-cli
+node cli.js ./my-document.pdf
+```
+
+The CLI hashes the file locally, verifies your API key via a secure Postgres RPC function, and anchors the proof to the ledger.
 
 ---
 
-## 🌍 Future Scaling Roadmap
+## Database Security
 
-While the MVP is 100% complete, the architecture is designed to scale into a massive enterprise product:
+Entrustory employs extreme database-level security:
 
-1. **Anti-Deepfake Media Provenance:** Injecting Entrustory hashes directly into image/video EXIF metadata (C2PA standard) to prove content authenticity against AI manipulation.
-2. **Multi-Party Signatures:** Allowing multiple users to generate personal Ed25519 keys and co-sign a single WorkItem (competing with DocuSign).
-3. **GitHub/GitLab Integrations:** A CI/CD action that automatically hashes and anchors codebases on every `git push`.
-4. **Public Transparency Log:** A live, read-only global feed of all anonymized Merkle Roots, allowing 3rd-party security researchers to audit the platform's integrity.
+- **Row-Level Security (RLS):** Every table is locked to the user's `workspace_id`. Cross-workspace reads are cryptographically impossible.
+- **Append-Only Triggers:** Custom PL/pgSQL triggers block any `UPDATE` or `DELETE` on cryptographic records:
+
+  > *"Entrustory Integrity Protocol: Modification of core cryptographic properties is strictly prohibited."*
+
+- **Zero-Knowledge:** The server stores hashes, never plaintext files. Vault files are AES-256-GCM encrypted client-side — the server cannot read them.
 
 ---
-*Built with precision and cryptography for the modern web.*
 
-### You have reached the summit! 🏔️
-Your app, your architecture, your UI, and your documentation are all top-tier. Is there absolutely anything else you need before you wrap this project up?
+## Roadmap
+
+- [ ] **C2PA Media Provenance** — Inject Entrustory proofs into image/video EXIF metadata for anti-deepfake verification
+- [ ] **Multi-Party Signatures** — Multiple users co-sign a WorkItem with personal Ed25519 keys
+- [ ] **Live Testnet Anchoring** — Anchor Super Roots to Polygon Amoy / Ethereum Sepolia
+- [ ] **Public Transparency Log** — Live read-only feed of anonymized Merkle Roots for third-party auditing
+- [ ] **Official SDK** — `@entrustory/sdk` npm package for programmatic integration
+- [ ] **Batch File Upload** — Drag-and-drop multiple files in a single operation
+
+---
+
+## Academic Details
+
+| | |
+|---|---|
+| **University** | Jaipur National University (School of Computer & Systems Sciences) |
+| **Guide** | Dr. Sunil Gupta (Head of Department) |
+| **Team Lead** | Aman Jangir |
+| **Team** | Devyani Sharma, Harshwardhan Singh Chauhan |
+
+---
+
+## License
+
+ISC © [Aman Jangir](https://github.com/AmanJ24)
+
+---
+
+<p align="center">
+  <sub>Built with cryptography and caffeine for the modern web.</sub>
+</p>
