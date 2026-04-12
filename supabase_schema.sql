@@ -240,7 +240,9 @@ DECLARE
   v_timestamp TEXT := to_char(NOW() at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"');
   v_message TEXT;
   v_signature TEXT;
-  v_secret TEXT := 'entrustory_super_secret_master_key_2026';
+  -- REPLACE 'your_secure_master_key_here' with a strong secret before deploying to production
+  -- You can use `current_setting('app.settings.master_key')` to read from Postgres config securely instead.
+  v_secret TEXT := 'your_secure_master_key_here';
 BEGIN
   SELECT user_id, workspace_id INTO v_user_id, v_workspace_id FROM api_keys WHERE key_value = p_api_key;
   IF v_user_id IS NULL THEN RAISE EXCEPTION 'Unauthorized: Invalid API Key'; END IF;
