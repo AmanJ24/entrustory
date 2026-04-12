@@ -1,0 +1,20 @@
+{
+  "name": "entrustory-cli",
+  "version": "1.0.0",
+  "description": "Entrustory CLI — Anchor local files to the Entrustory ledger via the terminal.",
+  "main": "cli.js",
+  "type": "module",
+  "bin": {
+    "entrustory": "./cli.js"
+  },
+  "scripts": {
+    "anchor": "node cli.js",
+    "cron": "node anchor-cron.js"
+  },
+  "author": "Aman Jangir",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.99.0",
+    "dotenv": "^17.3.1"
+  }
+}

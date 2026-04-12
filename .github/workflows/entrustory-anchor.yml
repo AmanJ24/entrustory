@@ -1,0 +1,70 @@
+# Entrustory — Anchor GitHub Action
+# Anchors build artifacts to the Entrustory ledger on every push/release.
+#
+# Usage: Copy this file to .github/workflows/entrustory-anchor.yml
+# Required secret: ENTRUSTORY_API_KEY (set in repo Settings → Secrets)
+
+name: Entrustory Anchor
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  anchor:
+    name: Anchor Build Artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Hash Build Artifacts
+        id: hash
+        run: |
+          # Hash the entire dist directory
+          HASH=$(find dist -type f -exec sha256sum {} \; | sort | sha256sum | awk '{print $1}')
+          echo "artifact_hash=${HASH}" >> $GITHUB_OUTPUT
+          echo "📦 Build artifact hash: ${HASH}"
+
+      - name: Anchor to Entrustory Ledger
+        if: env.ENTRUSTORY_API_KEY != ''
+        env:
+          ENTRUSTORY_API_KEY: ${{ secrets.ENTRUSTORY_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          # Install the Entrustory CLI
+          cd entrustory-cli && npm ci && cd ..
+
+          # Anchor the build hash
+          echo "⚓ Anchoring build hash to Entrustory ledger..."
+          echo "${{ steps.hash.outputs.artifact_hash }}" > /tmp/build-manifest.txt
+          node entrustory-cli/cli.js /tmp/build-manifest.txt
+
+      - name: Summary
+        run: |
+          echo "### ⚓ Entrustory Anchor" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Hash** | \`${{ steps.hash.outputs.artifact_hash }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch** | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Timestamp** | $(date -u +'%Y-%m-%d %H:%M:%S UTC') |" >> $GITHUB_STEP_SUMMARY
