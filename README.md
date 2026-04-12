@@ -58,7 +58,7 @@ Entrustory is a **Continuous Lifecycle Integrity Engine** — not just a timesta
 | **L1** | Content privacy | Files are hashed locally via Web Crypto API. Raw data never touches the server. |
 | **L2** | Scalable proof | Hashes form a Merkle Tree with O(log n) inclusion proofs. |
 | **L3** | Server attestation | The Merkle root is signed with Ed25519 (via `@noble/curves`) with an exact UTC timestamp. |
-| **L4** | Decentralized trust | A cron job batches pending roots into a Super Root and anchors it on-chain. |
+| **L4** | Decentralized trust | A cron job batches pending roots into a Super Root and anchors it on-chain. *(Testnet integration in progress — see Roadmap)* |
 
 ---
 
@@ -111,11 +111,10 @@ entrustory/
 ├── supabase/
 │   └── functions/
 │       └── sign-merkle-root/ # Edge Function for server-side Ed25519 signing
-├── .github/
-│   └── workflows/
-│       └── entrustory-anchor.yml  # CI/CD anchor action
-└── OTHER/
-    └── supabase_schema.sql  # Full database schema with RLS & triggers
+├── supabase_schema.sql      # Full database schema with RLS & immutability triggers
+└── .github/
+    └── workflows/
+        └── entrustory-anchor.yml  # CI/CD anchor action
 ```
 
 ---
@@ -164,7 +163,7 @@ Import the schema into your Supabase project:
 
 ```bash
 # Via Supabase Dashboard → SQL Editor → paste contents of:
-cat OTHER/supabase_schema.sql
+cat supabase_schema.sql
 ```
 
 ### 4. Run
@@ -202,23 +201,12 @@ Entrustory employs extreme database-level security:
 
 ## Roadmap
 
+- [ ] **Live Testnet Anchoring** — Anchor Super Roots to Polygon Amoy / Ethereum Sepolia
+- [ ] **Batch File Upload** — Drag-and-drop multiple files in a single anchoring operation
 - [ ] **C2PA Media Provenance** — Inject Entrustory proofs into image/video EXIF metadata for anti-deepfake verification
 - [ ] **Multi-Party Signatures** — Multiple users co-sign a WorkItem with personal Ed25519 keys
-- [ ] **Live Testnet Anchoring** — Anchor Super Roots to Polygon Amoy / Ethereum Sepolia
 - [ ] **Public Transparency Log** — Live read-only feed of anonymized Merkle Roots for third-party auditing
 - [ ] **Official SDK** — `@entrustory/sdk` npm package for programmatic integration
-- [ ] **Batch File Upload** — Drag-and-drop multiple files in a single operation
-
----
-
-## Academic Details
-
-| | |
-|---|---|
-| **University** | Jaipur National University (School of Computer & Systems Sciences) |
-| **Guide** | Dr. Sunil Gupta (Head of Department) |
-| **Team Lead** | Aman Jangir |
-| **Team** | Devyani Sharma, Harshwardhan Singh Chauhan |
 
 ---
 
