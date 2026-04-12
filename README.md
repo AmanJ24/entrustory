@@ -212,7 +212,8 @@ Entrustory employs extreme database-level security:
 
 ## License
 
-ISC © [Aman Jangir](https://github.com/AmanJ24)
+This project is licensed under the [GNU AGPL v3](LICENSE) © Aman Jangir.
+Commercial use requires prior written permission from the author.
 
 ---
 
