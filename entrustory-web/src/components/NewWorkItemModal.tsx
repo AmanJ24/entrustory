@@ -23,7 +23,7 @@ export const NewWorkItemModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
   const [encryptionPassword, setEncryptionPassword] = useState('');
   
   const [status, setStatus] = useState<'idle' | 'hashing' | 'encrypting' | 'uploading' | 'saving' | 'success' | 'duplicate'>('idle');
-  const [duplicateHash, setDuplicateHash] = useState('');
+  const [, setDuplicateHash] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -101,8 +101,8 @@ export const NewWorkItemModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
         onSuccess(); onClose(); setStatus('idle'); setFile(null); setProjectName(''); setStoreInVault(false); setEncryptionPassword('');
       }, 1500);
 
-    } catch (err: any) {
-      console.error(err); toast.error(`Failed: ${err.message}`); setStatus('idle');
+    } catch (err: unknown) {
+      console.error(err); toast.error(`Failed: ${(err as Error).message}`); setStatus('idle');
     }
   };
 

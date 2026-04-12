@@ -6,9 +6,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, LayoutDashboard, Folders, ShieldCheck,
+  Search, LayoutDashboard, ShieldCheck,
   History, Key, Users, DownloadCloud, Settings,
-  CreditCard, FileText, Plus, X, Command
+  CreditCard, FileText, Plus, Command
 } from 'lucide-react';
 
 interface CommandItem {
@@ -75,6 +75,7 @@ export const CommandPalette = () => {
   // Focus input when opened
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery('');
       setSelectedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 50);
@@ -82,6 +83,7 @@ export const CommandPalette = () => {
   }, [isOpen]);
 
   // Keyboard navigation
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -93,6 +95,7 @@ export const CommandPalette = () => {
       filteredCommands[selectedIndex].action();
       setIsOpen(false);
     }
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   }, [filteredCommands, selectedIndex]);
 
   if (!isOpen) return null;

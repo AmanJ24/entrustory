@@ -19,6 +19,19 @@ import QRCode from 'qrcode';
 
 type VerifyStatus = 'idle' | 'processing' | 'success' | 'failed';
 
+interface ProofData {
+  sha256_hash: string;
+  file_name: string;
+  file_size: number;
+  created_at: string;
+  versions?: {
+    version_tag: string;
+    merkle_root: string;
+    server_signature: string;
+    created_at: string;
+  };
+}
+
 export const PublicVerify = () => {
   const { hash: urlHash } = useParams();
   const [inputMode, setInputMode] = useState<'file' | 'hash'>('file');
@@ -26,18 +39,9 @@ export const PublicVerify = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [status, setStatus] = useState<VerifyStatus>('idle');
   const [searchQuery, setSearchQuery] = useState('');
-  const [proofData, setProofData] = useState<any>(null);
+  const [proofData, setProofData] = useState<ProofData | null>(null);
   const [isSignatureValid, setIsSignatureValid] = useState<boolean | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Auto-verify if hash is in the URL
-  useEffect(() => {
-    if (urlHash && urlHash.length === 64) {
-      setInputMode('hash');
-      setSearchQuery(urlHash);
-      verifyHash(urlHash);
-    }
-  }, [urlHash]);
 
   const verifyHash = async (hashToVerify: string) => {
     setStatus('processing');
@@ -66,6 +70,15 @@ export const PublicVerify = () => {
       setStatus('failed');
     }
   };
+
+  // Auto-verify if hash is in the URL
+  useEffect(() => {
+    if (urlHash && urlHash.length === 64) {
+      setInputMode('hash');
+      setSearchQuery(urlHash);
+      verifyHash(urlHash);
+    }
+  }, [urlHash]);
 
   const handleFileUpload = async (file: File) => {
     setSelectedFile(file);

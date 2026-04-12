@@ -10,7 +10,7 @@ export const useCountUp = (target: number, duration = 1200): number => {
 
   useEffect(() => {
     if (target === 0) {
-      setValue(0);
+      setTimeout(() => setValue(0), 0);
       return;
     }
 

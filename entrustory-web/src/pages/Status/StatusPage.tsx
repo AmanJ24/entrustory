@@ -3,7 +3,7 @@
  * Shows real-time metrics about the Entrustory infrastructure.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../utils/supabase';
 import {
@@ -120,11 +120,11 @@ export const StatusPage = () => {
   };
 
   // Generate fake 90-day uptime bars
-  const uptimeBars = Array.from({ length: 90 }, (_, i) => {
+  const uptimeBars = useMemo(() => Array.from({ length: 90 }, (_, i) => {
     const rand = Math.random();
     if (i > 85) return rand > 0.05 ? 'operational' : 'degraded';
     return rand > 0.02 ? 'operational' : rand > 0.005 ? 'degraded' : 'down';
-  });
+  }), []);
 
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-100 font-['Inter']">

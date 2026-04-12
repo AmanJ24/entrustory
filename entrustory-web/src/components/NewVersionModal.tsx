@@ -106,9 +106,9 @@ export const NewVersionModal: React.FC<Props> = ({
         setEncryptionPassword('');
       }, 1500);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(`Failed to append version: ${err.message || 'Unknown error'}`);
+      toast.error(`Failed to append version: ${(err as Error).message || 'Unknown error'}`);
       setStatus('idle');
     }
   };

@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ShieldCheck, Search, Rocket, Fingerprint, Terminal, 
-  Package, ChevronRight, Copy, CheckCircle, ThumbsUp, ThumbsDown, ArrowRight,
+  ChevronRight, CheckCircle, ThumbsUp, ThumbsDown, ArrowRight,
   Hash, Link2, ShieldAlert
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 // --- MASSIVE DYNAMIC CONTENT DICTIONARY ---
-const DOC_DATA: Record<string, any> = {
+const DOC_DATA: Record<string, Record<string, any>> = {
   'getting-started': {
     title: 'Getting Started with Entrustory',
     subtitle: 'Initialize your cryptographic vault, generate API keys, and anchor your first asset in under 5 minutes.',
@@ -184,7 +184,6 @@ export const Documentation = () => {
   // Dynamic State Control
   const [activeDoc, setActiveDoc] = useState<string>('getting-started');
   const [activeTab, setActiveTab] = useState<string>('overview');
-  const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -197,11 +196,7 @@ export const Documentation = () => {
     window.scrollTo(0,0);
   };
 
-  const copyCode = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0B1120] text-slate-300 font-sans selection:bg-cyan-500/30 selection:text-cyan-100">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Fingerprint as FingerprintIcon, Shield, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Shield, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
 import toast from 'react-hot-toast';
 
@@ -54,8 +54,8 @@ export const Login = () => {
         if (error) throw error;
         navigate('/app/dashboard');
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during authentication.');
+    } catch (err: unknown) {
+      setError((err as Error).message || 'An error occurred during authentication.');
     } finally {
       setLoading(false);
     }
