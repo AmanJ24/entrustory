@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { HomePage } from './pages/Home/HomePage';
 import { Login } from './pages/Auth/Login';
 import { Dashboard } from './pages/Dashboard/Dashboard';
@@ -22,6 +23,7 @@ function App() {
     <BrowserRouter>
       {/* Global Command Palette — Cmd+K */}
       <CommandPalette />
+      <SpeedInsights />
 
       <Routes>
         
