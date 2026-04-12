@@ -49,7 +49,7 @@ const SALT_SIZE = 16;
 const IV_SIZE = 12;
 
 // Helper to derive a strong AES key from a string password
-const deriveKey = async (password: string, salt: Uint8Array, keyUsage: "encrypt" | "decrypt"[]) => {
+const deriveKey = async (password: string, salt: Uint8Array, keyUsage: KeyUsage[]) => {
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
@@ -59,7 +59,7 @@ const deriveKey = async (password: string, salt: Uint8Array, keyUsage: "encrypt"
     ["deriveKey"]
   );
   return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt, iterations: PBKDF2_ITERATIONS, hash: "SHA-256" },
+    { name: "PBKDF2", salt: salt as any, iterations: PBKDF2_ITERATIONS, hash: "SHA-256" },
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     false,

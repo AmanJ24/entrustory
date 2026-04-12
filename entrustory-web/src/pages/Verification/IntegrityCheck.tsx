@@ -13,7 +13,6 @@ export const IntegrityCheck = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
-  const [hashProgress, setHashProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [proofData, setProofData] = useState<any>(null);
   const [showJson, setShowJson] = useState(false);
@@ -98,9 +97,8 @@ export const IntegrityCheck = () => {
 
   const processFile = async (file: File) => {
     setVerificationStatus('processing');
-    setHashProgress(0);
     try {
-      const hash = await calculateFileHash(file, (pct) => setHashProgress(pct));
+      const hash = await calculateFileHash(file);
       setSearchQuery(hash);
       await verifyHashAgainstLedger(hash);
     } catch (error) {

@@ -58,7 +58,7 @@ export const Workspace = () => {
   const activeVersion = workItem.versions?.[activeVersionIndex];
   const fileData = activeVersion?.evidence_hashes?.[0];
   
-  const previousVersion = activeVersionIndex + 1 < workItem.versions.length ? workItem.versions[activeVersionIndex + 1] : null;
+  const previousVersion = activeVersionIndex + 1 < (workItem.versions?.length || 0) ? workItem.versions![activeVersionIndex + 1] : null;
   const previousFileData = previousVersion?.evidence_hashes?.[0];
   const hasPreviousVersion = !!previousVersion;
 
@@ -78,7 +78,7 @@ export const Workspace = () => {
   const executeDownload = async (isEncrypted: boolean) => {
     try {
       setIsDecrypting(true);
-      const { data, error } = await supabase.storage.from('vault').download(fileData.storage_path);
+      const { data, error } = await supabase.storage.from('vault').download(fileData!.storage_path!);
       if (error || !data) throw error || new Error("Download failed");
 
       let finalBlob = data;
@@ -89,7 +89,7 @@ export const Workspace = () => {
       const url = URL.createObjectURL(finalBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = fileData.file_name;
+      a.download = fileData!.file_name;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -225,7 +225,7 @@ export const Workspace = () => {
                 </div>
                 <div className="grid grid-cols-2 divide-x divide-[#2A2E3D]">
                   <div className="p-5 bg-green-500/5">
-                    <div className="text-xs font-bold text-[#10B981] mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-sm">arrow_left</span> {activeVersion.version_tag}</div>
+                    <div className="text-xs font-bold text-[#10B981] mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-sm">arrow_left</span> {activeVersion?.version_tag}</div>
                     <div className="space-y-4">
                       <div className="p-3 border border-green-500/30 bg-green-500/10 rounded-lg">
                         <div className="text-[10px] text-[#94A3B8] uppercase mb-1">Hash</div>

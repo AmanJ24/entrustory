@@ -4,8 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { 
   Building2, ShieldCheck, Key, Bell, Globe, 
-  Loader2, X, AlertTriangle, CheckCircle, 
-  Lock, Fingerprint, Database, Server, HardDrive
+  Loader2, X, HardDrive, Lock
 } from 'lucide-react';
 
 export const WorkspaceSettings = () => {
@@ -22,13 +21,10 @@ export const WorkspaceSettings = () => {
 
   // Advanced Form States
   const [require2FA, setRequire2FA] = useState(true);
-  const [sessionTimeout, setSessionTimeout] = useState('30m');
   const [ipWhitelist, setIpWhitelist] = useState(['192.168.1.1/24']);
   const [newIp, setNewIp] = useState('');
   
   const [hashAlgo, setHashAlgo] = useState('sha256');
-  const [anchorFreq, setAnchorFreq] = useState('daily');
-  const [vaultPolicy, setVaultPolicy] = useState('optional');
 
   useEffect(() => {
     const fetchWorkspace = async () => {

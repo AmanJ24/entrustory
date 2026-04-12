@@ -3,7 +3,7 @@ import { supabase } from '../../utils/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { formatBytes } from '../../utils/format';
 import { 
-  CreditCard, BarChart3, Receipt, Download, 
+  BarChart3, Receipt, Download, 
   ShieldAlert, HardDrive, Fingerprint, Zap, Loader2, X, CheckCircle
 } from 'lucide-react';
 
