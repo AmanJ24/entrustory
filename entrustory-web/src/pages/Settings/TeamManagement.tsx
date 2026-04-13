@@ -131,18 +131,18 @@ export const TeamManagement = () => {
   };
 
   return (
-    <div className="relative min-h-full font-['Space_Grotesk'] text-slate-100 bg-[#0B1120] z-0">
+    <div className="relative min-h-full font-['Space_Grotesk'] text-on-surface bg-surface z-0">
       <div className="max-w-[1200px] mx-auto p-6 md:p-12 flex flex-col gap-8 h-full pb-24">
         
         {/* Page Header */}
-        <div className="flex flex-wrap justify-between items-end gap-4 border-b border-slate-800 pb-6">
+        <div className="flex flex-wrap justify-between items-end gap-4 border-b border-surface-variant pb-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-white text-3xl font-bold tracking-tight">Workspace Members</h1>
-            <p className="text-slate-400 text-base">Manage team access and cryptographic permissions for your workspace.</p>
+            <p className="text-on-surface-variant text-base">Manage team access and cryptographic permissions for your workspace.</p>
           </div>
           <button 
             onClick={() => setInviteModalOpen(true)}
-            className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-5 py-2.5 rounded-lg transition-all shadow-[0_0_15px_-3px_rgba(6,182,212,0.4)]"
+            className="flex items-center gap-2 bg-tertiary hover:bg-tertiary text-white font-bold px-5 py-2.5 rounded-lg transition-all shadow-[0_0_15px_-3px_rgba(6,182,212,0.4)]"
           >
             <span className="material-symbols-outlined text-xl">person_add</span>
             <span>Invite Member</span>
@@ -151,52 +151,52 @@ export const TeamManagement = () => {
 
         <div className="flex flex-col gap-6">
           {/* Members Table */}
-          <div className="w-full overflow-visible rounded-xl border border-slate-800 bg-[#111722] shadow-xl">
+          <div className="w-full overflow-visible rounded-xl border border-surface-variant bg-surface-container-low shadow-xl">
             <div className="overflow-visible">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#0B1120] border-b border-slate-800">
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400 w-1/4">User</th>
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400 w-1/6">Role</th>
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400 w-1/3">Public Key Fingerprint</th>
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400 text-right w-1/6">Actions</th>
+                  <tr className="bg-surface border-b border-surface-variant">
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant w-1/4">User</th>
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant w-1/6">Role</th>
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant w-1/3">Public Key Fingerprint</th>
+                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant text-right w-1/6">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
                   {loading ? (
-                    <tr><td colSpan={4} className="p-8 text-center"><Loader2 className="animate-spin text-cyan-500 mx-auto" /></td></tr>
+                    <tr><td colSpan={4} className="p-8 text-center"><Loader2 className="animate-spin text-tertiary mx-auto" /></td></tr>
                   ) : members.map((member) => {
                     const isMe = member.user_id === user?.id;
                     const isOwner = member.role === 'owner';
 
                     return (
-                      <tr key={member.user_id} className="group hover:bg-slate-800/30 transition-colors">
+                      <tr key={member.user_id} className="group hover:bg-surface-variant/30 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div className={`w-9 h-9 rounded-full border flex items-center justify-center font-bold text-sm
-                              ${isMe ? 'bg-cyan-900 border-cyan-700 text-cyan-100' : 'bg-slate-800 border-slate-600 text-slate-300'}`}>
+                              ${isMe ? 'bg-surface-container-highest border-outline-variant text-on-primary' : 'bg-surface-variant border-outline text-on-surface'}`}>
                               {member.email?.charAt(0).toUpperCase() || 'U'}
                             </div>
                             <div className="flex flex-col">
                               <span className="text-sm font-medium text-white flex items-center gap-2">
                                 {isMe ? 'You' : member.email?.split('@')[0]}
                               </span>
-                              <span className="text-xs text-slate-500">{member.email}</span>
+                              <span className="text-xs text-on-surface-variant">{member.email}</span>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
-                            ${member.role === 'owner' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 
+                            ${member.role === 'owner' ? 'bg-tertiary/10 text-tertiary border-tertiary/20' : 
                               member.role === 'admin' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 
-                              'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                              'bg-surface-variant text-on-surface border-outline-variant'}`}>
                             {member.role.toUpperCase()}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div 
                             onClick={() => copyToClipboard(member.public_key_fingerprint || member.user_id, member.user_id)}
-                            className="flex items-center gap-2 font-mono text-sm text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer w-fit" 
+                            className="flex items-center gap-2 font-mono text-sm text-on-surface-variant hover:text-tertiary transition-colors cursor-pointer w-fit" 
                             title="Click to copy"
                           >
                             {copiedId === member.user_id ? <CheckCircle size={16} className="text-emerald-400" /> : <Fingerprint size={16} />}
@@ -209,7 +209,7 @@ export const TeamManagement = () => {
                               e.stopPropagation();
                               setActiveActionMenu(activeActionMenu === member.user_id ? null : member.user_id);
                             }}
-                            className="text-slate-500 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-all"
+                            className="text-on-surface-variant hover:text-white p-2 rounded-lg hover:bg-surface-variant transition-all"
                           >
                             <MoreHorizontal size={20} />
                           </button>
@@ -218,25 +218,25 @@ export const TeamManagement = () => {
                           {activeActionMenu === member.user_id && (
                             <div 
                               onClick={(e) => e.stopPropagation()}
-                              className="absolute right-8 top-10 mt-1 w-48 bg-[#111722] border border-slate-700 rounded-lg shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100"
+                              className="absolute right-8 top-10 mt-1 w-48 bg-surface-container-low border border-outline-variant rounded-lg shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100"
                             >
                               {!isOwner && (
                                 <>
-                                  <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-800">Change Role</div>
-                                  <button onClick={() => { handleChangeRole(member.user_id, 'admin'); setActiveActionMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
+                                  <div className="px-3 py-2 text-xs font-semibold text-on-surface-variant uppercase tracking-wider border-b border-surface-variant">Change Role</div>
+                                  <button onClick={() => { handleChangeRole(member.user_id, 'admin'); setActiveActionMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-variant hover:text-white flex items-center gap-2">
                                     <Shield size={14} className="text-purple-400" /> Make Admin
                                   </button>
-                                  <button onClick={() => { handleChangeRole(member.user_id, 'viewer'); setActiveActionMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[14px] text-slate-400">visibility</span> Make Viewer
+                                  <button onClick={() => { handleChangeRole(member.user_id, 'viewer'); setActiveActionMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-variant hover:text-white flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[14px] text-on-surface-variant">visibility</span> Make Viewer
                                   </button>
-                                  <div className="border-t border-slate-800 my-1"></div>
+                                  <div className="border-t border-surface-variant my-1"></div>
                                   <button onClick={() => { handleRemoveMember(member.user_id); setActiveActionMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors">
                                     <UserX size={14} /> Remove Member
                                   </button>
                                 </>
                               )}
                               {isOwner && (
-                                <div className="p-3 text-xs text-slate-500 text-center">
+                                <div className="p-3 text-xs text-on-surface-variant text-center">
                                   Owner actions restricted. Transfer ownership first.
                                 </div>
                               )}
@@ -249,24 +249,24 @@ export const TeamManagement = () => {
                 </tbody>
               </table>
             </div>
-            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800 bg-[#0B1120]">
-              <span className="text-sm text-slate-400">Showing <span className="text-white font-medium">{members.length}</span> members</span>
+            <div className="flex items-center justify-between px-6 py-4 border-t border-surface-variant bg-surface">
+              <span className="text-sm text-on-surface-variant">Showing <span className="text-white font-medium">{members.length}</span> members</span>
             </div>
           </div>
 
           {/* Invite Info Card */}
-          <div className="rounded-xl border border-dashed border-slate-700 bg-slate-800/20 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mt-4">
+          <div className="rounded-xl border border-dashed border-outline-variant bg-surface-variant/20 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mt-4">
             <div className="flex gap-4">
-              <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0 border border-cyan-500/20">
-                <span className="material-symbols-outlined text-cyan-400 text-2xl">mail</span>
+              <div className="w-12 h-12 rounded-full bg-tertiary/10 flex items-center justify-center shrink-0 border border-tertiary/20">
+                <span className="material-symbols-outlined text-tertiary text-2xl">mail</span>
               </div>
               <div className="flex flex-col gap-1">
                 <h3 className="text-white font-bold text-lg">Invite your team</h3>
-                <p className="text-slate-400 text-sm max-w-lg">Collaborate securely by inviting your team members. You can assign specific roles and manage permissions at any time.</p>
+                <p className="text-on-surface-variant text-sm max-w-lg">Collaborate securely by inviting your team members. You can assign specific roles and manage permissions at any time.</p>
               </div>
             </div>
             {/* Navigates to a future Docs page */}
-            <Link to="/docs/roles" className="text-cyan-400 hover:text-cyan-300 font-medium text-sm whitespace-nowrap flex items-center gap-1 group bg-cyan-500/10 px-4 py-2 rounded-lg border border-cyan-500/20 transition-all">
+            <Link to="/docs/roles" className="text-tertiary hover:text-tertiary font-medium text-sm whitespace-nowrap flex items-center gap-1 group bg-tertiary/10 px-4 py-2 rounded-lg border border-tertiary/20 transition-all">
               Learn about roles
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -278,47 +278,47 @@ export const TeamManagement = () => {
       {/* --- INVITE MODAL --- */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111722] border border-slate-800 rounded-xl shadow-2xl w-full max-w-md p-6 relative">
-            <button onClick={() => setInviteModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+          <div className="bg-surface-container-low border border-surface-variant rounded-xl shadow-2xl w-full max-w-md p-6 relative">
+            <button onClick={() => setInviteModalOpen(false)} className="absolute top-4 right-4 text-on-surface-variant hover:text-white">
               <X size={20} />
             </button>
             
             <h2 className="text-xl font-bold text-white mb-2 font-display">Invite Team Member</h2>
-            <p className="text-sm text-slate-400 mb-6">Send an encrypted invitation link to join this workspace.</p>
+            <p className="text-sm text-on-surface-variant mb-6">Send an encrypted invitation link to join this workspace.</p>
 
             {inviteStatus === 'success' ? (
               <div className="flex flex-col items-center justify-center py-8 text-emerald-400">
                 <CheckCircle size={48} className="mb-4 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
                 <h3 className="text-xl font-bold text-white">Invitation Sent</h3>
-                <p className="text-sm text-slate-400 mt-2 text-center">They have been added to the table as pending.</p>
+                <p className="text-sm text-on-surface-variant mt-2 text-center">They have been added to the table as pending.</p>
               </div>
             ) : (
               <form onSubmit={handleInvite} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
+                  <label className="block text-sm font-medium text-on-surface mb-1">Email Address</label>
                   <div className="relative">
-                    <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
                     <input 
                       type="email" required value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
-                      className="w-full bg-[#0B1120] border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-white outline-none focus:border-cyan-500"
+                      className="w-full bg-surface border border-outline-variant rounded-lg pl-10 pr-4 py-2.5 text-white outline-none focus:border-tertiary"
                       placeholder="colleague@company.com"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Workspace Role</label>
+                  <label className="block text-sm font-medium text-on-surface mb-2">Workspace Role</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button 
                       type="button" onClick={() => setInviteRole('admin')} 
-                      className={`py-3 px-4 rounded-lg border text-sm transition-all flex flex-col items-center gap-1 ${inviteRole === 'admin' ? 'bg-purple-500/10 border-purple-500 text-purple-400' : 'bg-[#0B1120] border-slate-700 text-slate-400 hover:border-slate-500'}`}
+                      className={`py-3 px-4 rounded-lg border text-sm transition-all flex flex-col items-center gap-1 ${inviteRole === 'admin' ? 'bg-purple-500/10 border-purple-500 text-purple-400' : 'bg-surface border-outline-variant text-on-surface-variant hover:border-slate-500'}`}
                     >
                       <Shield size={18} />
                       <span className="font-semibold">Admin</span>
                     </button>
                     <button 
                       type="button" onClick={() => setInviteRole('viewer')} 
-                      className={`py-3 px-4 rounded-lg border text-sm transition-all flex flex-col items-center gap-1 ${inviteRole === 'viewer' ? 'bg-slate-700 border-slate-400 text-white' : 'bg-[#0B1120] border-slate-700 text-slate-400 hover:border-slate-500'}`}
+                      className={`py-3 px-4 rounded-lg border text-sm transition-all flex flex-col items-center gap-1 ${inviteRole === 'viewer' ? 'bg-slate-700 border-slate-400 text-white' : 'bg-surface border-outline-variant text-on-surface-variant hover:border-slate-500'}`}
                     >
                       <span className="material-symbols-outlined text-[18px]">visibility</span>
                       <span className="font-semibold">Viewer</span>
@@ -328,7 +328,7 @@ export const TeamManagement = () => {
 
                 <button 
                   type="submit" disabled={inviteStatus !== 'idle' || !inviteEmail}
-                  className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 mt-4"
+                  className="w-full bg-tertiary hover:bg-tertiary disabled:opacity-50 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 mt-4"
                 >
                   {inviteStatus === 'sending' ? <><Loader2 size={18} className="animate-spin" /> Sending...</> : 'Send Invitation'}
                 </button>

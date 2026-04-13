@@ -69,28 +69,28 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex w-full bg-[#111718] font-['Space_Grotesk'] text-white antialiased selection:bg-[#0dccf2] selection:text-[#111718]">
+    <div className="min-h-screen flex w-full bg-surface font-['Space_Grotesk'] text-white antialiased selection:bg-[#ffb148] selection:text-[#0e0e0e]">
       
       {/* Left Side: Visual */}
-      <div className="hidden lg:flex w-1/2 relative bg-[#1b2527] overflow-hidden flex-col justify-between p-12">
+      <div className="hidden lg:flex w-1/2 relative bg-surface-container overflow-hidden flex-col justify-between p-12">
         {/* Background Lock Image */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#111718]/30 to-[#111718]"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0e0e0e]/30 to-[#0e0e0e]"></div>
           {/* 3D Lock visualization using CSS */}
           <div className="absolute inset-0 flex items-center justify-center opacity-50">
             <div className="relative">
               {/* Outer ring */}
-              <div className="w-80 h-80 border-[3px] border-[#0dccf2]/20 rounded-full" />
+              <div className="w-80 h-80 border-[3px] border-[#ffb148]/20 rounded-full" />
               {/* Inner ring */}
-              <div className="absolute inset-8 border-[2px] border-[#0dccf2]/15 rounded-full" />
+              <div className="absolute inset-8 border-[2px] border-[#ffb148]/15 rounded-full" />
               {/* Lock body */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-28 bg-gradient-to-b from-[#0dccf2]/10 to-[#0dccf2]/5 rounded-2xl border border-[#0dccf2]/20 flex items-center justify-center">
-                <div className="w-6 h-6 rounded-full bg-[#0dccf2]/30 border-2 border-[#0dccf2]/40" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-28 bg-gradient-to-b from-[#ffb148]/10 to-[#ffb148]/5 rounded-2xl border border-[#ffb148]/20 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-[#ffb148]/30 border-2 border-[#ffb148]/40" />
               </div>
               {/* Lock shackle */}
-              <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-20 h-24 border-[3px] border-[#0dccf2]/20 rounded-t-full border-b-0" />
+              <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-20 h-24 border-[3px] border-[#ffb148]/20 rounded-t-full border-b-0" />
               {/* Glow */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-[#0dccf2]/5 rounded-full blur-3xl" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-[#ffb148]/5 rounded-full blur-3xl" />
             </div>
           </div>
         </div>
@@ -98,7 +98,7 @@ export const Login = () => {
         {/* Content Overlay */}
         <div className="relative z-10">
           <Link to="/" className="flex items-center gap-3 text-white mb-8">
-            <div className="size-8 text-[#0dccf2]">
+            <div className="size-8 text-tertiary">
               <LogoIcon className="w-full h-full" />
             </div>
             <h2 className="text-2xl font-bold leading-tight tracking-tight">Entrustory</h2>
@@ -107,18 +107,18 @@ export const Login = () => {
 
         <div className="relative z-10 max-w-lg">
           <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 tracking-tight">
-            Secure Access for the <span className="text-[#0dccf2]">Digital Age</span>
+            Secure Access for the <span className="text-tertiary">Digital Age</span>
           </h1>
-          <p className="text-lg text-[#9cb5ba] leading-relaxed mb-8">
+          <p className="text-lg text-on-surface-variant leading-relaxed mb-8">
             Entrustory provides verifiable proof of digital work with our programmable integrity infrastructure. Join thousands of developers building the future of trust.
           </p>
-          <div className="flex items-center gap-6 text-sm font-medium text-[#9cb5ba]">
+          <div className="flex items-center gap-6 text-sm font-medium text-on-surface-variant">
             <div className="flex items-center gap-2">
-              <Shield className="text-[#0dccf2]" size={20} />
+              <Shield className="text-tertiary" size={20} />
               <span>SOC2 Compliant</span>
             </div>
             <div className="flex items-center gap-2">
-              <Lock className="text-[#0dccf2]" size={20} />
+              <Lock className="text-tertiary" size={20} />
               <span>End-to-end Encryption</span>
             </div>
           </div>
@@ -129,7 +129,7 @@ export const Login = () => {
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 lg:p-12 relative">
         {/* Mobile Header Logo */}
         <div className="lg:hidden absolute top-6 left-6 flex items-center gap-3 text-white">
-          <div className="size-6 text-[#0dccf2]">
+          <div className="size-6 text-tertiary">
             <LogoIcon className="w-full h-full" />
           </div>
           <h2 className="text-xl font-bold leading-tight">Entrustory</h2>
@@ -138,18 +138,18 @@ export const Login = () => {
         <div className="w-full max-w-[440px] flex flex-col gap-8">
           {/* Toggle */}
           <div className="flex flex-col gap-2">
-            <div className="bg-[#1b2527] p-1 rounded-xl flex w-full border border-[#283639]">
+            <div className="bg-surface-container p-1 rounded-xl flex w-full border border-[#484848]">
               <button
                 type="button"
                 onClick={() => { setMode('signin'); setError(null); }}
-                className={`flex-1 py-2.5 text-center text-sm font-semibold rounded-lg transition-all duration-200 ${mode === 'signin' ? 'bg-[#283639] text-white' : 'text-[#9cb5ba] hover:text-white'}`}
+                className={`flex-1 py-2.5 text-center text-sm font-semibold rounded-lg transition-all duration-200 ${mode === 'signin' ? 'bg-outline-variant text-white' : 'text-on-surface-variant hover:text-white'}`}
               >
                 Sign In
               </button>
               <button
                 type="button"
                 onClick={() => { setMode('signup'); setError(null); }}
-                className={`flex-1 py-2.5 text-center text-sm font-semibold rounded-lg transition-all duration-200 ${mode === 'signup' ? 'bg-[#283639] text-white' : 'text-[#9cb5ba] hover:text-white'}`}
+                className={`flex-1 py-2.5 text-center text-sm font-semibold rounded-lg transition-all duration-200 ${mode === 'signup' ? 'bg-outline-variant text-white' : 'text-on-surface-variant hover:text-white'}`}
               >
                 Create Account
               </button>
@@ -160,7 +160,7 @@ export const Login = () => {
             <h2 className="text-2xl font-bold text-white">
               {mode === 'signin' ? 'Welcome back' : 'Initialize Workspace'}
             </h2>
-            <p className="text-[#9cb5ba] text-sm">
+            <p className="text-on-surface-variant text-sm">
               {mode === 'signin' ? 'Enter your details to access your secure vault.' : 'Set up your digital integrity infrastructure.'}
             </p>
           </div>
@@ -178,7 +178,7 @@ export const Login = () => {
               <label className="text-sm font-medium text-white ml-1">Email Address</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="material-symbols-outlined text-[#9cb5ba] group-focus-within:text-[#0dccf2] transition-colors text-[20px]">mail</span>
+                  <span className="material-symbols-outlined text-on-surface-variant group-focus-within:text-tertiary transition-colors text-[20px]">mail</span>
                 </div>
                 <input
                   type="email"
@@ -186,7 +186,7 @@ export const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="w-full bg-[#1b2527] border border-[#283639] text-white text-base rounded-xl focus:ring-2 focus:ring-[#0dccf2]/50 focus:border-[#0dccf2] block pl-11 p-3.5 placeholder:text-[#9cb5ba]/50 transition-all outline-none"
+                  className="w-full bg-surface-container border border-[#484848] text-white text-base rounded-xl focus:ring-2 focus:ring-[#ffb148]/50 focus:border-[#ffb148] block pl-11 p-3.5 placeholder:text-on-surface-variant/50 transition-all outline-none"
                 />
               </div>
             </div>
@@ -195,14 +195,14 @@ export const Login = () => {
               <div className="flex justify-between items-center ml-1">
                 <label className="text-sm font-medium text-white">Password</label>
                 {mode === 'signin' && (
-                  <a className="text-xs font-medium text-[#0dccf2] hover:text-[#0ab8da] transition-colors cursor-pointer">
+                  <a className="text-xs font-medium text-tertiary hover:text-[#e79400] transition-colors cursor-pointer">
                     Forgot password?
                   </a>
                 )}
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="material-symbols-outlined text-[#9cb5ba] group-focus-within:text-[#0dccf2] transition-colors text-[20px]">lock</span>
+                  <span className="material-symbols-outlined text-on-surface-variant group-focus-within:text-tertiary transition-colors text-[20px]">lock</span>
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -210,12 +210,12 @@ export const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-[#1b2527] border border-[#283639] text-white text-base rounded-xl focus:ring-2 focus:ring-[#0dccf2]/50 focus:border-[#0dccf2] block pl-11 pr-11 p-3.5 placeholder:text-[#9cb5ba]/50 transition-all outline-none"
+                  className="w-full bg-surface-container border border-[#484848] text-white text-base rounded-xl focus:ring-2 focus:ring-[#ffb148]/50 focus:border-[#ffb148] block pl-11 pr-11 p-3.5 placeholder:text-on-surface-variant/50 transition-all outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#9cb5ba] hover:text-white transition-colors"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-on-surface-variant hover:text-white transition-colors"
                 >
                   {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                 </button>
@@ -226,7 +226,7 @@ export const Login = () => {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full bg-[#0dccf2] hover:bg-[#0ab8da] disabled:opacity-50 text-[#111718] font-bold text-base py-3.5 px-6 rounded-xl transition-all shadow-[0_0_20px_rgba(13,204,242,0.15)] hover:shadow-[0_0_25px_rgba(13,204,242,0.3)] flex items-center justify-center gap-2"
+                className="w-full bg-[#ffb148] hover:bg-[#e79400] disabled:opacity-50 text-[#0e0e0e] font-bold text-base py-3.5 px-6 rounded-xl transition-all shadow-[0_0_20px_rgba(255,177,72,0.15)] hover:shadow-[0_0_25px_rgba(255,177,72,0.3)] flex items-center justify-center gap-2"
               >
                 <span>{loading ? 'Processing...' : (mode === 'signin' ? 'Continue Securely' : 'Generate Keys & Register')}</span>
                 {!loading && <ArrowRight size={20} />}
@@ -236,9 +236,9 @@ export const Login = () => {
 
           {/* Divider */}
           <div className="relative flex py-2 items-center">
-            <div className="flex-grow border-t border-[#283639]"></div>
-            <span className="flex-shrink-0 mx-4 text-[#9cb5ba] text-xs font-medium uppercase tracking-wider">Or continue with</span>
-            <div className="flex-grow border-t border-[#283639]"></div>
+            <div className="flex-grow border-t border-[#484848]"></div>
+            <span className="flex-shrink-0 mx-4 text-on-surface-variant text-xs font-medium uppercase tracking-wider">Or continue with</span>
+            <div className="flex-grow border-t border-[#484848]"></div>
           </div>
 
           {/* Social Login */}
@@ -246,7 +246,7 @@ export const Login = () => {
             <button
               type="button"
               onClick={() => handleOAuthLogin('google')}
-              className="flex items-center justify-center gap-3 bg-[#1b2527] hover:bg-[#283639] border border-[#283639] text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 group"
+              className="flex items-center justify-center gap-3 bg-surface-container hover:bg-outline-variant border border-[#484848] text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 group"
             >
               <GoogleIcon />
               <span>Google</span>
@@ -254,7 +254,7 @@ export const Login = () => {
             <button
               type="button"
               onClick={() => handleOAuthLogin('github')}
-              className="flex items-center justify-center gap-3 bg-[#1b2527] hover:bg-[#283639] border border-[#283639] text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 group"
+              className="flex items-center justify-center gap-3 bg-surface-container hover:bg-outline-variant border border-[#484848] text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 group"
             >
               <GitHubIcon />
               <span>GitHub</span>
@@ -262,20 +262,20 @@ export const Login = () => {
           </div>
 
           {/* Footer Security Notes */}
-          <div className="mt-4 flex items-center justify-center gap-4 text-xs text-[#9cb5ba] opacity-70">
+          <div className="mt-4 flex items-center justify-center gap-4 text-xs text-on-surface-variant opacity-70">
             <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[16px] text-[#0dccf2]">fingerprint</span>
+              <span className="material-symbols-outlined text-[16px] text-tertiary">fingerprint</span>
               <span>Biometric Support</span>
             </div>
-            <div className="w-1 h-1 bg-[#9cb5ba] rounded-full"></div>
+            <div className="w-1 h-1 bg-[#ababab] rounded-full"></div>
             <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[16px] text-[#0dccf2]">encrypted</span>
+              <span className="material-symbols-outlined text-[16px] text-tertiary">encrypted</span>
               <span>256-bit Encryption</span>
             </div>
           </div>
         </div>
 
-        <p className="absolute bottom-6 text-center text-xs text-[#9cb5ba]/50 max-w-sm">
+        <p className="absolute bottom-6 text-center text-xs text-on-surface-variant/50 max-w-sm">
           By continuing, you agree to Entrustory's <a className="underline hover:text-white" href="#">Terms of Service</a> and <a className="underline hover:text-white" href="#">Privacy Policy</a>.
         </p>
       </div>

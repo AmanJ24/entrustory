@@ -171,24 +171,24 @@ export const ExportCenter = () => {
   };
 
   return (
-    <div className="bg-[#0B1120] font-['Inter'] text-slate-100 min-h-full flex flex-col p-6 sm:p-10 relative z-0">
-      <div className="absolute top-0 left-1/4 w-1/2 h-96 bg-cyan-900/10 blur-[120px] -z-10 pointer-events-none"></div>
+    <div className="bg-surface font-['Inter'] text-on-surface min-h-full flex flex-col p-6 sm:p-10 relative z-0">
+      <div className="absolute top-0 left-1/4 w-1/2 h-96 bg-surface-container-highest/10 blur-[120px] -z-10 pointer-events-none"></div>
 
       <div className="flex flex-col w-full max-w-[1400px] mx-auto gap-8 pb-20">
         
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-slate-800 pb-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-surface-variant pb-6">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight text-white font-display">Evidence Export Center</h1>
-            <p className="text-slate-400 max-w-2xl text-sm">
+            <p className="text-on-surface-variant max-w-2xl text-sm">
               Bundle digital integrity proofs for legal and compliance review. All exports include cryptographic signatures and immutable timestamps.
             </p>
           </div>
           {/* --- FIXED: View Past Exports Button --- */}
           <button 
             onClick={() => navigate('/app/logs')}
-            className="px-4 py-2 rounded-lg border border-slate-700 hover:bg-slate-800 hover:border-cyan-500 font-bold text-sm transition-all flex items-center gap-2 text-white bg-[#111722]"
+            className="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-variant hover:border-tertiary font-bold text-sm transition-all flex items-center gap-2 text-white bg-surface-container-low"
           >
-            <History size={16} className="text-cyan-400" />
+            <History size={16} className="text-tertiary" />
             View Past Exports
           </button>
         </div>
@@ -199,38 +199,38 @@ export const ExportCenter = () => {
           <div className="xl:col-span-2 space-y-8">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-cyan-600 text-[#0B1120] font-bold text-sm">1</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-tertiary text-[#0e0e0e] font-bold text-sm">1</span>
                 <h2 className="text-lg font-bold text-white">Select Records</h2>
               </div>
               
-              <div className="overflow-hidden rounded-xl border border-slate-800 bg-[#111722] shadow-lg h-[400px] flex flex-col">
+              <div className="overflow-hidden rounded-xl border border-surface-variant bg-surface-container-low shadow-lg h-[400px] flex flex-col">
                 <div className="overflow-y-auto flex-1">
                   <table className="w-full text-left border-collapse relative">
-                    <thead className="bg-[#0B1120] sticky top-0 z-10 border-b border-slate-800">
+                    <thead className="bg-surface sticky top-0 z-10 border-b border-surface-variant">
                       <tr>
                         <th className="px-4 py-3 w-12 text-center">
-                          <input type="checkbox" onChange={toggleAll} checked={items.length > 0 && selectedIds.size === items.length} className="rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500" />
+                          <input type="checkbox" onChange={toggleAll} checked={items.length > 0 && selectedIds.size === items.length} className="rounded border-outline bg-surface-variant text-tertiary focus:ring-tertiary" />
                         </th>
-                        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">WorkItem</th>
-                        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Version</th>
-                        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Timestamp (UTC)</th>
-                        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-500">Status</th>
+                        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant">WorkItem</th>
+                        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Version</th>
+                        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Timestamp (UTC)</th>
+                        <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/50">
                       {loading ? (
-                        <tr><td colSpan={5} className="p-10 text-center"><Loader2 className="animate-spin text-cyan-500 mx-auto" /></td></tr>
+                        <tr><td colSpan={5} className="p-10 text-center"><Loader2 className="animate-spin text-tertiary mx-auto" /></td></tr>
                       ) : items.length === 0 ? (
-                        <tr><td colSpan={5} className="p-10 text-center text-slate-500">No cryptographic records found.</td></tr>
+                        <tr><td colSpan={5} className="p-10 text-center text-on-surface-variant">No cryptographic records found.</td></tr>
                       ) : (
                         items.map(item => (
-                          <tr key={item.id} onClick={() => toggleSelection(item.id)} className="hover:bg-slate-800/30 transition-colors cursor-pointer group">
+                          <tr key={item.id} onClick={() => toggleSelection(item.id)} className="hover:bg-surface-variant/30 transition-colors cursor-pointer group">
                             <td className="px-4 py-4 text-center">
-                              <input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => {}} className="rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500" />
+                              <input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => {}} className="rounded border-outline bg-surface-variant text-tertiary focus:ring-tertiary" />
                             </td>
                             <td className="px-4 py-4 text-sm font-medium text-white">{item.work_item_name}</td>
-                            <td className="px-4 py-4 text-xs text-slate-400 font-mono">{item.version_tag}</td>
-                            <td className="px-4 py-4 text-xs text-slate-400">{new Date(item.created_at).toLocaleString()}</td>
+                            <td className="px-4 py-4 text-xs text-on-surface-variant font-mono">{item.version_tag}</td>
+                            <td className="px-4 py-4 text-xs text-on-surface-variant">{new Date(item.created_at).toLocaleString()}</td>
                             <td className="px-4 py-4">
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 uppercase tracking-wide border border-emerald-500/20">
                                 <CheckCircle size={10} /> Anchored
@@ -247,23 +247,23 @@ export const ExportCenter = () => {
 
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-cyan-600 text-[#0B1120] font-bold text-sm">2</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-tertiary text-[#0e0e0e] font-bold text-sm">2</span>
                 <h2 className="text-lg font-bold text-white">Export Format</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div onClick={() => setExportFormat('pdf')} className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${exportFormat === 'pdf' ? 'border-cyan-500 bg-cyan-500/10' : 'border-slate-800 bg-[#111722] hover:border-slate-700'}`}>
+                <div onClick={() => setExportFormat('pdf')} className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${exportFormat === 'pdf' ? 'border-tertiary bg-tertiary/10' : 'border-surface-variant bg-surface-container-low hover:border-outline-variant'}`}>
                   <div className="flex-1">
                     <span className="block text-sm font-bold text-white mb-1">Signed PDF Archive</span>
-                    <span className="block text-xs text-slate-400">Human-readable report including visual proof of signature and chain metadata.</span>
+                    <span className="block text-xs text-on-surface-variant">Human-readable report including visual proof of signature and chain metadata.</span>
                   </div>
-                  <FileText className={exportFormat === 'pdf' ? 'text-cyan-400' : 'text-slate-500'} size={24} />
+                  <FileText className={exportFormat === 'pdf' ? 'text-tertiary' : 'text-on-surface-variant'} size={24} />
                 </div>
-                <div onClick={() => setExportFormat('json')} className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${exportFormat === 'json' ? 'border-cyan-500 bg-cyan-500/10' : 'border-slate-800 bg-[#111722] hover:border-slate-700'}`}>
+                <div onClick={() => setExportFormat('json')} className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${exportFormat === 'json' ? 'border-tertiary bg-tertiary/10' : 'border-surface-variant bg-surface-container-low hover:border-outline-variant'}`}>
                   <div className="flex-1">
                     <span className="block text-sm font-bold text-white mb-1">Technical JSON Bundle</span>
-                    <span className="block text-xs text-slate-400">Machine-verifiable JSON containing raw cryptographic hashes and Merkle paths.</span>
+                    <span className="block text-xs text-on-surface-variant">Machine-verifiable JSON containing raw cryptographic hashes and Merkle paths.</span>
                   </div>
-                  <FileJson className={exportFormat === 'json' ? 'text-cyan-400' : 'text-slate-500'} size={24} />
+                  <FileJson className={exportFormat === 'json' ? 'text-tertiary' : 'text-on-surface-variant'} size={24} />
                 </div>
               </div>
             </div>
@@ -271,60 +271,60 @@ export const ExportCenter = () => {
 
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-cyan-600 text-[#0B1120] font-bold text-sm">3</span>
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-tertiary text-[#0e0e0e] font-bold text-sm">3</span>
               <h2 className="text-lg font-bold text-white">Export Summary</h2>
             </div>
             
-            <div className="rounded-xl border border-slate-800 bg-[#111722] shadow-2xl overflow-hidden flex flex-col h-full min-h-[500px] xl:max-h-[640px]">
-              <div className="p-4 bg-[#0B1120] border-b border-slate-800 flex justify-between items-center">
-                <span className="text-xs font-bold text-slate-400 tracking-widest uppercase">Draft Details</span>
-                <ShieldCheck size={16} className="text-cyan-400" />
+            <div className="rounded-xl border border-surface-variant bg-surface-container-low shadow-2xl overflow-hidden flex flex-col h-full min-h-[500px] xl:max-h-[640px]">
+              <div className="p-4 bg-surface border-b border-surface-variant flex justify-between items-center">
+                <span className="text-xs font-bold text-on-surface-variant tracking-widest uppercase">Draft Details</span>
+                <ShieldCheck size={16} className="text-tertiary" />
               </div>
               
               <div className="flex-1 p-6 space-y-6 relative overflow-y-auto">
                 <div className="absolute left-9 top-10 bottom-10 w-px bg-slate-700 border-dashed border-l"></div>
                 
                 <div className="relative flex gap-4">
-                  <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center z-10 shrink-0 mt-1"><FileCheck size={12} className="text-slate-300" /></div>
+                  <div className="w-6 h-6 rounded-full bg-surface-variant border border-outline flex items-center justify-center z-10 shrink-0 mt-1"><FileCheck size={12} className="text-on-surface" /></div>
                   <div>
-                    <p className="text-xs font-bold text-slate-400">Step 1</p>
+                    <p className="text-xs font-bold text-on-surface-variant">Step 1</p>
                     <p className="text-sm font-medium text-white mb-1">Extract Hashes</p>
-                    <p className="text-[10px] text-slate-500">Pulling raw SHA-256 arrays from DB</p>
+                    <p className="text-[10px] text-on-surface-variant">Pulling raw SHA-256 arrays from DB</p>
                   </div>
                 </div>
 
                 <div className="relative flex gap-4">
-                  <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center z-10 shrink-0 mt-1"><LinkIcon size={12} className="text-slate-300" /></div>
+                  <div className="w-6 h-6 rounded-full bg-surface-variant border border-outline flex items-center justify-center z-10 shrink-0 mt-1"><LinkIcon size={12} className="text-on-surface" /></div>
                   <div>
-                    <p className="text-xs font-bold text-slate-400">Step 2</p>
+                    <p className="text-xs font-bold text-on-surface-variant">Step 2</p>
                     <p className="text-sm font-medium text-white mb-1">Resolve Merkle Paths</p>
-                    <p className="text-[10px] text-slate-500">Attaching root vectors to selection</p>
+                    <p className="text-[10px] text-on-surface-variant">Attaching root vectors to selection</p>
                   </div>
                 </div>
 
                 <div className="relative flex gap-4">
-                  <div className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500 flex items-center justify-center z-10 shrink-0 mt-1"><span className="material-symbols-outlined text-[12px] text-cyan-400 font-bold">draw</span></div>
+                  <div className="w-6 h-6 rounded-full bg-tertiary/20 border border-tertiary flex items-center justify-center z-10 shrink-0 mt-1"><span className="material-symbols-outlined text-[12px] text-tertiary font-bold">draw</span></div>
                   <div>
-                    <p className="text-xs font-bold text-cyan-400">Step 3</p>
+                    <p className="text-xs font-bold text-tertiary">Step 3</p>
                     <p className="text-sm font-medium text-white mb-1">Compile Signatures</p>
-                    <p className="text-[10px] text-slate-400">Attaching Ed25519/HMAC auth tags</p>
+                    <p className="text-[10px] text-on-surface-variant">Attaching Ed25519/HMAC auth tags</p>
                   </div>
                 </div>
               </div>
               
-              <div className="p-4 bg-[#0B1120] border-t border-slate-800 text-xs">
+              <div className="p-4 bg-surface border-t border-surface-variant text-xs">
                 <div className="flex justify-between mb-2">
-                  <span className="text-slate-400">Selected Items:</span>
+                  <span className="text-on-surface-variant">Selected Items:</span>
                   <span className="font-bold text-white">{selectedIds.size} Records</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Original Data Size:</span>
+                  <span className="text-on-surface-variant">Original Data Size:</span>
                   <span className="font-bold text-white font-mono">{formatBytes(totalSelectedSize)}</span>
                 </div>
               </div>
               
-              <div className="p-4 bg-[#111722]">
-                <button onClick={handleExport} disabled={selectedIds.size === 0 || isExporting} className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-[#0B1120] font-bold py-3 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all flex items-center justify-center gap-2">
+              <div className="p-4 bg-surface-container-low">
+                <button onClick={handleExport} disabled={selectedIds.size === 0 || isExporting} className="w-full bg-tertiary hover:bg-tertiary disabled:opacity-50 text-[#0e0e0e] font-bold py-3 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all flex items-center justify-center gap-2">
                   {isExporting ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
                   {isExporting ? 'Generating...' : `Export ${selectedIds.size} Proofs`}
                 </button>

@@ -203,7 +203,7 @@ export const IntegrityCheck = () => {
 
 
   return (
-    <div className="flex flex-col w-full font-['Inter'] bg-[#0B1120] text-slate-100 min-h-full">
+    <div className="flex flex-col w-full font-['Inter'] bg-surface text-on-surface min-h-full">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
         .mono-font { font-family: 'Space Mono', monospace; }
@@ -224,7 +224,7 @@ export const IntegrityCheck = () => {
             Public Verification Node
           </div>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-3">Verify Integrity.</h2>
-          <p className="text-slate-400 text-sm">
+          <p className="text-on-surface-variant text-sm">
             Independently validate the existence, timestamp, and integrity of any digital asset anchored on the Entrustory infrastructure.
           </p>
         </div>
@@ -234,16 +234,16 @@ export const IntegrityCheck = () => {
           {/* Left Column: Upload / Input */}
           <div className="lg:col-span-5 space-y-6">
             
-            <div className="flex bg-[#111722] p-1 rounded-lg w-full border border-slate-800">
+            <div className="flex bg-surface-container-low p-1 rounded-lg w-full border border-surface-variant">
               <button 
                 onClick={() => { setInputMode('file'); clearSelection(); }}
-                className={`flex-1 py-2 px-4 shadow-sm rounded-md text-sm font-semibold transition-all ${inputMode === 'file' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`flex-1 py-2 px-4 shadow-sm rounded-md text-sm font-semibold transition-all ${inputMode === 'file' ? 'bg-surface-variant text-white' : 'text-on-surface-variant hover:text-white'}`}
               >
                 Upload File
               </button>
               <button 
                 onClick={() => { setInputMode('hash'); clearSelection(); }}
-                className={`flex-1 py-2 px-4 shadow-sm rounded-md text-sm font-semibold transition-all ${inputMode === 'hash' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`flex-1 py-2 px-4 shadow-sm rounded-md text-sm font-semibold transition-all ${inputMode === 'hash' ? 'bg-surface-variant text-white' : 'text-on-surface-variant hover:text-white'}`}
               >
                 Direct Hash
               </button>
@@ -256,15 +256,15 @@ export const IntegrityCheck = () => {
                 onDrop={handleDrop}
                 onClick={() => verificationStatus === 'idle' && fileInputRef.current?.click()}
                 className={`rounded-xl p-8 transition-colors ${verificationStatus === 'idle' ? 'cursor-pointer' : ''} text-center flex flex-col items-center justify-center min-h-[300px] relative
-                  ${isDragging ? 'dashed-border-active' : 'dashed-border bg-[#111722] hover:bg-slate-800/50'}`}
+                  ${isDragging ? 'dashed-border-active' : 'dashed-border bg-surface-container-low hover:bg-surface-variant/50'}`}
               >
                 <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileSelect} onClick={(e) => (e.target as HTMLInputElement).value = ''} />
 
                 {verificationStatus === 'processing' ? (
                   <div className="flex flex-col items-center">
-                    <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
-                    <h3 className="text-lg font-bold text-cyan-400 mb-1">Querying Ledger</h3>
-                    <p className="text-sm text-slate-400 mono-font truncate max-w-[200px]">{selectedFile?.name}</p>
+                    <Loader2 className="w-12 h-12 text-tertiary animate-spin mb-4" />
+                    <h3 className="text-lg font-bold text-tertiary mb-1">Querying Ledger</h3>
+                    <p className="text-sm text-on-surface-variant mono-font truncate max-w-[200px]">{selectedFile?.name}</p>
                   </div>
                 ) : verificationStatus !== 'idle' ? (
                   <div className="w-full flex flex-col items-center">
@@ -277,37 +277,37 @@ export const IntegrityCheck = () => {
                     <h3 className="text-lg font-semibold text-white mb-1 truncate max-w-full px-4">
                       {selectedFile?.name}
                     </h3>
-                    <p className="text-sm text-slate-400 mb-6">
+                    <p className="text-sm text-on-surface-variant mb-6">
                       {verificationStatus === 'success' ? 'Ledger Match Found' : 'No Match Found'}
                     </p>
-                    <button onClick={(e) => { e.stopPropagation(); clearSelection(); }} className="w-full max-w-xs py-2.5 px-4 bg-slate-800 border border-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-700 transition-all text-sm">
+                    <button onClick={(e) => { e.stopPropagation(); clearSelection(); }} className="w-full max-w-xs py-2.5 px-4 bg-surface-variant border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-slate-700 transition-all text-sm">
                       Verify Another File
                     </button>
                   </div>
                 ) : (
                   <>
                     <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-transform
-                      ${isDragging ? 'bg-cyan-500/20 text-cyan-400 scale-110' : 'bg-slate-800 text-slate-400 group-hover:scale-110'}`}>
+                      ${isDragging ? 'bg-tertiary/20 text-tertiary scale-110' : 'bg-surface-variant text-on-surface-variant group-hover:scale-110'}`}>
                       <span className="material-symbols-outlined text-3xl">upload_file</span>
                     </div>
                     <h3 className="text-lg font-semibold text-white mb-2">
                       {isDragging ? 'Drop file to hash' : 'Drag and drop file'}
                     </h3>
-                    <p className="text-sm text-slate-400 mb-6 max-w-xs">
+                    <p className="text-sm text-on-surface-variant mb-6 max-w-xs">
                       Supports PDF, PNG, JPG, JSON, and raw binary. Files are hashed client-side.
                     </p>
-                    <button className="px-6 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-700 transition-all text-sm pointer-events-none">
+                    <button className="px-6 py-2.5 bg-surface-variant border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-slate-700 transition-all text-sm pointer-events-none">
                       Browse Files
                     </button>
                   </>
                 )}
               </div>
             ) : (
-              <div className="rounded-xl p-8 bg-[#111722] border border-slate-800 min-h-[300px] flex flex-col justify-center relative">
+              <div className="rounded-xl p-8 bg-surface-container-low border border-surface-variant min-h-[300px] flex flex-col justify-center relative">
                 {verificationStatus === 'processing' ? (
                    <div className="flex flex-col items-center">
-                     <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
-                     <h3 className="text-lg font-bold text-cyan-400 mb-1">Querying Ledger</h3>
+                     <Loader2 className="w-12 h-12 text-tertiary animate-spin mb-4" />
+                     <h3 className="text-lg font-bold text-tertiary mb-1">Querying Ledger</h3>
                    </div>
                 ) : verificationStatus !== 'idle' ? (
                   <div className="w-full flex flex-col items-center">
@@ -320,30 +320,30 @@ export const IntegrityCheck = () => {
                     <h3 className="text-lg font-semibold text-white mb-1">
                       {verificationStatus === 'success' ? 'Ledger Match Found' : 'No Match Found'}
                     </h3>
-                    <button onClick={clearSelection} className="mt-6 w-full max-w-xs py-2.5 px-4 bg-slate-800 border border-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-700 transition-all text-sm">
+                    <button onClick={clearSelection} className="mt-6 w-full max-w-xs py-2.5 px-4 bg-surface-variant border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-slate-700 transition-all text-sm">
                       Check Another Hash
                     </button>
                   </div>
                 ) : (
                   <>
-                    <div className="w-16 h-16 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center mb-4 mx-auto">
+                    <div className="w-16 h-16 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center mb-4 mx-auto">
                       <span className="material-symbols-outlined text-3xl">tag</span>
                     </div>
                     <h3 className="text-lg font-semibold text-white mb-2 text-center">Enter Cryptographic Hash</h3>
-                    <p className="text-sm text-slate-400 mb-6 text-center">Paste the 64-character SHA-256 hash to verify its presence in the ledger.</p>
+                    <p className="text-sm text-on-surface-variant mb-6 text-center">Paste the 64-character SHA-256 hash to verify its presence in the ledger.</p>
                     
                     <input 
                       type="text" 
                       placeholder="e.g. e3b0c44298fc1c14..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-[#0B1120] border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 font-mono text-sm text-white placeholder-slate-600 px-4 py-3 rounded-lg outline-none transition-all text-center mb-4"
+                      className="w-full bg-surface border border-outline-variant focus:border-tertiary focus:ring-1 focus:ring-tertiary font-mono text-sm text-white placeholder-slate-600 px-4 py-3 rounded-lg outline-none transition-all text-center mb-4"
                     />
                     
                     <button 
                       onClick={handleManualCheck}
                       disabled={searchQuery.length !== 64}
-                      className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold py-3 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all flex justify-center items-center gap-2"
+                      className="w-full bg-tertiary hover:bg-tertiary disabled:opacity-50 text-white font-bold py-3 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all flex justify-center items-center gap-2"
                     >
                       <Search size={18} />
                       Verify Hash
@@ -357,9 +357,9 @@ export const IntegrityCheck = () => {
           {/* Right Column: Verification Result */}
           <div className="lg:col-span-7 relative">
             {verificationStatus === 'idle' && (
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0B1120]/80 backdrop-blur-sm rounded-2xl border border-slate-800 border-dashed">
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-surface/80 backdrop-blur-sm rounded-2xl border border-surface-variant border-dashed">
                 <span className="material-symbols-outlined text-4xl text-slate-600 mb-3">lock</span>
-                <p className="text-slate-400 font-medium">Awaiting cryptographic input...</p>
+                <p className="text-on-surface-variant font-medium">Awaiting cryptographic input...</p>
               </div>
             )}
 
@@ -367,21 +367,21 @@ export const IntegrityCheck = () => {
               <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-red-900/10 backdrop-blur-sm rounded-2xl border border-red-500/30">
                 <ShieldAlert size={48} className="text-red-500 mb-4" />
                 <h3 className="text-xl font-bold text-white mb-2">Integrity Check Failed</h3>
-                <p className="text-slate-400 max-w-sm text-center text-sm">
+                <p className="text-on-surface-variant max-w-sm text-center text-sm">
                   This hash does not exist in the Entrustory ledger. The asset may have been modified, corrupted, or was never anchored.
                 </p>
               </div>
             )}
 
-            <div className={`bg-[#111722] rounded-2xl shadow-2xl border border-slate-800 overflow-hidden transition-opacity duration-500 ${verificationStatus === 'success' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`bg-surface-container-low rounded-2xl shadow-2xl border border-surface-variant overflow-hidden transition-opacity duration-500 ${verificationStatus === 'success' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
               
               {showJson ? (
                 <div className="h-full flex flex-col">
-                  <div className="bg-slate-800 px-6 py-3 flex justify-between items-center">
+                  <div className="bg-surface-variant px-6 py-3 flex justify-between items-center">
                     <span className="text-white font-mono text-sm">proof_data.json</span>
-                    <button onClick={() => setShowJson(false)} className="text-slate-400 hover:text-white">Close</button>
+                    <button onClick={() => setShowJson(false)} className="text-on-surface-variant hover:text-white">Close</button>
                   </div>
-                  <pre className="p-6 overflow-auto text-xs font-mono text-cyan-300 h-[400px]">
+                  <pre className="p-6 overflow-auto text-xs font-mono text-tertiary h-[400px]">
                     {JSON.stringify(proofData, null, 2)}
                   </pre>
                 </div>
@@ -396,35 +396,35 @@ export const IntegrityCheck = () => {
                   </div>
                   
                   <div className="p-8">
-                    <div className="flex items-start justify-between mb-8 pb-8 border-b border-slate-800">
+                    <div className="flex items-start justify-between mb-8 pb-8 border-b border-surface-variant">
                       <div className="max-w-[70%]">
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Asset Name</p>
+                        <p className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Asset Name</p>
                         <h3 className="text-xl font-bold text-white flex items-center gap-2 truncate">
                           {proofData?.file_name || 'Verified Hash'}
                           <span className="material-symbols-outlined text-emerald-500 text-lg shrink-0">check_circle</span>
                         </h3>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Original Anchor</p>
+                        <p className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Original Anchor</p>
                         <p className="text-sm font-medium text-white">{safeDate(proofData?.created_at, 'locale')}</p>
                       </div>
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-8 mb-8">
-                      <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
-                        <div className="flex items-center gap-2 mb-2 text-slate-400">
+                      <div className="bg-surface-container-lowest/50 p-4 rounded-lg border border-surface-variant">
+                        <div className="flex items-center gap-2 mb-2 text-on-surface-variant">
                           <span className="material-symbols-outlined text-sm">schedule</span>
                           <span className="text-xs font-bold uppercase tracking-wider">Server Timestamp</span>
                         </div>
-                        <p className="mono-font text-sm text-slate-200 font-semibold">{safeDate(proofData?.created_at, 'iso')}</p>
-                        <p className="text-xs text-slate-500 mt-1">DB Insertion Verified</p>
+                        <p className="mono-font text-sm text-on-surface font-semibold">{safeDate(proofData?.created_at, 'iso')}</p>
+                        <p className="text-xs text-on-surface-variant mt-1">DB Insertion Verified</p>
                       </div>
-                      <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
-                        <div className="flex items-center gap-2 mb-2 text-slate-400">
+                      <div className="bg-surface-container-lowest/50 p-4 rounded-lg border border-surface-variant">
+                        <div className="flex items-center gap-2 mb-2 text-on-surface-variant">
                           <span className="material-symbols-outlined text-sm">key</span>
                           <span className="text-xs font-bold uppercase tracking-wider">Server Signature</span>
                         </div>
-                        <p className="mono-font text-xs text-slate-200 break-all leading-relaxed">
+                        <p className="mono-font text-xs text-on-surface break-all leading-relaxed">
                           {proofData?.versions?.server_signature ? 'hmac_sha256:signed' : 'Awaiting Signature'}
                         </p>
                         
@@ -449,19 +449,19 @@ export const IntegrityCheck = () => {
                         <h4 className="text-sm font-bold text-white uppercase tracking-wider">Merkle Path Validation</h4>
                         <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs rounded font-medium">Path Complete</span>
                       </div>
-                      <div className="relative pl-4 border-l-2 border-slate-800 space-y-0">
+                      <div className="relative pl-4 border-l-2 border-surface-variant space-y-0">
                         
                         <div className="flex items-center gap-4 pb-6 relative">
-                          <div className="w-3 h-3 rounded-full bg-slate-400 ring-4 ring-[#111722] z-10 absolute -left-[21px]"></div>
-                          <div className="flex-1 bg-slate-900 text-white p-3 rounded-lg text-xs mono-font shadow-sm flex justify-between items-center border border-slate-800">
-                            <span className="text-slate-500 mr-2">ROOT:</span>
+                          <div className="w-3 h-3 rounded-full bg-slate-400 ring-4 ring-[#131313] z-10 absolute -left-[21px]"></div>
+                          <div className="flex-1 bg-slate-900 text-white p-3 rounded-lg text-xs mono-font shadow-sm flex justify-between items-center border border-surface-variant">
+                            <span className="text-on-surface-variant mr-2">ROOT:</span>
                             <span className="truncate w-48">{proofData?.versions?.merkle_root}</span>
                             <span className="material-symbols-outlined text-sm text-emerald-400 ml-2">lock</span>
                           </div>
                         </div>
                         
                         <div className="flex items-center gap-4 relative">
-                          <div className="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-[#111722] z-10 absolute -left-[21px] shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                          <div className="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-[#131313] z-10 absolute -left-[21px] shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
                           <div className="flex-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-3 rounded-lg text-xs mono-font font-semibold flex flex-col shadow-sm">
                             <div className="flex justify-between items-center mb-1">
                               <span className="text-emerald-500">YOUR FILE HASH:</span>
@@ -475,11 +475,11 @@ export const IntegrityCheck = () => {
                     </div>
                   </div>
                   
-                  <div className="bg-slate-900/80 px-8 py-4 border-t border-slate-800 flex justify-between items-center">
-                  <button onClick={generatePdfCertificate} className="text-sm text-slate-400 hover:text-white flex items-center gap-2 transition-colors">
+                  <div className="bg-slate-900/80 px-8 py-4 border-t border-surface-variant flex justify-between items-center">
+                  <button onClick={generatePdfCertificate} className="text-sm text-on-surface-variant hover:text-white flex items-center gap-2 transition-colors">
                     <Download size={16} /> Download PDF Certificate
                   </button>  
-                  <button onClick={() => setShowJson(true)} className="text-sm text-cyan-500 hover:text-cyan-400 font-medium transition-colors flex items-center gap-1">
+                  <button onClick={() => setShowJson(true)} className="text-sm text-tertiary hover:text-tertiary font-medium transition-colors flex items-center gap-1">
                       <Code size={16} /> View Raw JSON
                     </button>
                   </div>

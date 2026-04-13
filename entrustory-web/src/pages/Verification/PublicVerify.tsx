@@ -162,7 +162,7 @@ export const PublicVerify = () => {
 
     // QR code
     try {
-      const qrDataUrl = await QRCode.toDataURL(verifyUrl, { width: 140, margin: 1, color: { dark: '#0B1120', light: '#ffffff' } });
+      const qrDataUrl = await QRCode.toDataURL(verifyUrl, { width: 140, margin: 1, color: { dark: '#0e0e0e', light: '#ffffff' } });
       doc.addImage(qrDataUrl, 'PNG', 150, 165, 40, 40);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
@@ -183,19 +183,19 @@ export const PublicVerify = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-slate-100 font-['Inter']">
+    <div className="min-h-screen bg-surface text-on-surface font-['Inter']">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-[#0B1120]/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-surface-variant bg-surface/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-cyan-500/10 border border-cyan-500/30 rounded flex items-center justify-center text-cyan-400">
+            <div className="w-8 h-8 bg-tertiary/10 border border-tertiary/30 rounded flex items-center justify-center text-tertiary">
               <ShieldCheck size={20} />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-white">Entrustory</h1>
           </Link>
           <div className="flex items-center gap-3">
-            <Link to="/docs/getting-started" className="text-sm text-slate-400 hover:text-white transition-colors">Docs</Link>
-            <Link to="/login" className="bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-cyan-500 transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+            <Link to="/docs/getting-started" className="text-sm text-on-surface-variant hover:text-white transition-colors">Docs</Link>
+            <Link to="/login" className="bg-tertiary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-tertiary transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]">
               Sign In
             </Link>
           </div>
@@ -212,7 +212,7 @@ export const PublicVerify = () => {
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
             Verify Any Asset
           </h2>
-          <p className="text-slate-400 text-lg">
+          <p className="text-on-surface-variant text-lg">
             Independently validate the existence, timestamp, and integrity of any digital asset anchored on Entrustory. No account required.
           </p>
         </div>
@@ -220,11 +220,11 @@ export const PublicVerify = () => {
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Left: Input */}
           <div className="space-y-6">
-            <div className="flex bg-[#111722] p-1 rounded-lg border border-slate-800">
-              <button onClick={() => { setInputMode('file'); reset(); }} className={`flex-1 py-2.5 px-4 rounded-md text-sm font-semibold transition-all ${inputMode === 'file' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
+            <div className="flex bg-surface-container-low p-1 rounded-lg border border-surface-variant">
+              <button onClick={() => { setInputMode('file'); reset(); }} className={`flex-1 py-2.5 px-4 rounded-md text-sm font-semibold transition-all ${inputMode === 'file' ? 'bg-surface-variant text-white' : 'text-on-surface-variant hover:text-white'}`}>
                 <Upload size={14} className="inline mr-2 -mt-0.5" />Upload File
               </button>
-              <button onClick={() => { setInputMode('hash'); reset(); }} className={`flex-1 py-2.5 px-4 rounded-md text-sm font-semibold transition-all ${inputMode === 'hash' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}>
+              <button onClick={() => { setInputMode('hash'); reset(); }} className={`flex-1 py-2.5 px-4 rounded-md text-sm font-semibold transition-all ${inputMode === 'hash' ? 'bg-surface-variant text-white' : 'text-on-surface-variant hover:text-white'}`}>
                 <Hash size={14} className="inline mr-2 -mt-0.5" />Direct Hash
               </button>
             </div>
@@ -236,14 +236,14 @@ export const PublicVerify = () => {
                 onDrop={handleDrop}
                 onClick={() => status === 'idle' && fileInputRef.current?.click()}
                 className={`rounded-xl p-10 text-center flex flex-col items-center justify-center min-h-[300px] border-2 border-dashed transition-all cursor-pointer
-                  ${isDragging ? 'border-cyan-500 bg-cyan-500/5' : 'border-slate-700 bg-[#111722] hover:border-slate-600'}`}
+                  ${isDragging ? 'border-tertiary bg-tertiary/5' : 'border-outline-variant bg-surface-container-low hover:border-outline'}`}
               >
                 <input type="file" className="hidden" ref={fileInputRef} onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])} />
                 {status === 'processing' ? (
                   <div className="flex flex-col items-center">
-                    <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
-                    <h3 className="text-lg font-bold text-cyan-400">Hashing & Querying Ledger...</h3>
-                    {selectedFile && <p className="text-sm text-slate-400 mt-1 font-mono truncate max-w-[200px]">{selectedFile.name}</p>}
+                    <Loader2 className="w-12 h-12 text-tertiary animate-spin mb-4" />
+                    <h3 className="text-lg font-bold text-tertiary">Hashing & Querying Ledger...</h3>
+                    {selectedFile && <p className="text-sm text-on-surface-variant mt-1 font-mono truncate max-w-[200px]">{selectedFile.name}</p>}
                   </div>
                 ) : status !== 'idle' ? (
                   <div className="flex flex-col items-center">
@@ -251,28 +251,28 @@ export const PublicVerify = () => {
                       {status === 'success' ? <CheckCircle size={32} /> : <XCircle size={32} />}
                     </div>
                     <h3 className="text-lg font-semibold text-white mb-1">{selectedFile?.name}</h3>
-                    <p className="text-sm text-slate-400 mb-6">{status === 'success' ? 'Ledger Match Found' : 'No Match Found'}</p>
-                    <button onClick={(e) => { e.stopPropagation(); reset(); }} className="px-6 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-700 transition-all text-sm">
+                    <p className="text-sm text-on-surface-variant mb-6">{status === 'success' ? 'Ledger Match Found' : 'No Match Found'}</p>
+                    <button onClick={(e) => { e.stopPropagation(); reset(); }} className="px-6 py-2.5 bg-surface-variant border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-slate-700 transition-all text-sm">
                       Verify Another File
                     </button>
                   </div>
                 ) : (
                   <>
-                    <div className="w-16 h-16 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center mb-4">
                       <Upload size={28} />
                     </div>
                     <h3 className="text-lg font-semibold text-white mb-2">Drag and drop any file</h3>
-                    <p className="text-sm text-slate-400 mb-6">Files are hashed locally in your browser. Nothing is uploaded.</p>
-                    <span className="px-6 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 font-medium rounded-lg text-sm">Browse Files</span>
+                    <p className="text-sm text-on-surface-variant mb-6">Files are hashed locally in your browser. Nothing is uploaded.</p>
+                    <span className="px-6 py-2.5 bg-surface-variant border border-outline-variant text-on-surface font-medium rounded-lg text-sm">Browse Files</span>
                   </>
                 )}
               </div>
             ) : (
-              <div className="rounded-xl p-10 bg-[#111722] border border-slate-800 min-h-[300px] flex flex-col justify-center">
+              <div className="rounded-xl p-10 bg-surface-container-low border border-surface-variant min-h-[300px] flex flex-col justify-center">
                 {status === 'processing' ? (
                   <div className="flex flex-col items-center">
-                    <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
-                    <h3 className="text-lg font-bold text-cyan-400">Querying Ledger...</h3>
+                    <Loader2 className="w-12 h-12 text-tertiary animate-spin mb-4" />
+                    <h3 className="text-lg font-bold text-tertiary">Querying Ledger...</h3>
                   </div>
                 ) : status !== 'idle' ? (
                   <div className="flex flex-col items-center">
@@ -280,28 +280,28 @@ export const PublicVerify = () => {
                       {status === 'success' ? <CheckCircle size={32} /> : <XCircle size={32} />}
                     </div>
                     <h3 className="text-lg font-semibold text-white mb-1">{status === 'success' ? 'Ledger Match Found' : 'No Match Found'}</h3>
-                    <button onClick={reset} className="mt-6 px-6 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-700 transition-all text-sm">
+                    <button onClick={reset} className="mt-6 px-6 py-2.5 bg-surface-variant border border-outline-variant text-on-surface font-medium rounded-lg hover:bg-slate-700 transition-all text-sm">
                       Check Another Hash
                     </button>
                   </div>
                 ) : (
                   <>
-                    <div className="w-16 h-16 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center mb-4 mx-auto">
+                    <div className="w-16 h-16 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center mb-4 mx-auto">
                       <Hash size={28} />
                     </div>
                     <h3 className="text-lg font-semibold text-white mb-2 text-center">Enter SHA-256 Hash</h3>
-                    <p className="text-sm text-slate-400 mb-6 text-center">Paste the 64-character hash to verify.</p>
+                    <p className="text-sm text-on-surface-variant mb-6 text-center">Paste the 64-character hash to verify.</p>
                     <input
                       type="text"
                       placeholder="e3b0c44298fc1c149afbf4c8996fb924..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-[#0B1120] border border-slate-700 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 font-mono text-sm text-white placeholder-slate-600 px-4 py-3 rounded-lg outline-none transition-all text-center mb-4"
+                      className="w-full bg-surface border border-outline-variant focus:border-tertiary focus:ring-1 focus:ring-tertiary font-mono text-sm text-white placeholder-slate-600 px-4 py-3 rounded-lg outline-none transition-all text-center mb-4"
                     />
                     <button
                       onClick={() => searchQuery.trim().length === 64 && verifyHash(searchQuery.trim().toLowerCase())}
                       disabled={searchQuery.trim().length !== 64}
-                      className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold py-3 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all"
+                      className="w-full bg-tertiary hover:bg-tertiary disabled:opacity-50 text-white font-bold py-3 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all"
                     >
                       Verify Hash
                     </button>
@@ -314,9 +314,9 @@ export const PublicVerify = () => {
           {/* Right: Result */}
           <div className="relative">
             {status === 'idle' && (
-              <div className="flex flex-col items-center justify-center bg-[#0B1120]/80 backdrop-blur-sm rounded-2xl border border-dashed border-slate-800 p-16">
+              <div className="flex flex-col items-center justify-center bg-surface/80 backdrop-blur-sm rounded-2xl border border-dashed border-surface-variant p-16">
                 <ShieldCheck size={48} className="text-slate-700 mb-4" />
-                <p className="text-slate-500 font-medium">Awaiting cryptographic input...</p>
+                <p className="text-on-surface-variant font-medium">Awaiting cryptographic input...</p>
               </div>
             )}
 
@@ -324,14 +324,14 @@ export const PublicVerify = () => {
               <div className="flex flex-col items-center justify-center bg-red-900/10 backdrop-blur-sm rounded-2xl border border-red-500/30 p-16">
                 <ShieldAlert size={48} className="text-red-500 mb-4" />
                 <h3 className="text-xl font-bold text-white mb-2">Integrity Check Failed</h3>
-                <p className="text-slate-400 max-w-sm text-center text-sm">
+                <p className="text-on-surface-variant max-w-sm text-center text-sm">
                   This hash does not exist in the Entrustory ledger. The asset may have been modified or was never anchored.
                 </p>
               </div>
             )}
 
             {status === 'success' && proofData && (
-              <div className="bg-[#111722] rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+              <div className="bg-surface-container-low rounded-2xl border border-surface-variant overflow-hidden shadow-2xl">
                 {/* Success banner */}
                 <div className="bg-emerald-500/20 border-b border-emerald-500/30 px-8 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3 text-emerald-400">
@@ -345,28 +345,28 @@ export const PublicVerify = () => {
 
                 <div className="p-8 space-y-6">
                   {/* Asset info */}
-                  <div className="flex justify-between items-start pb-6 border-b border-slate-800">
+                  <div className="flex justify-between items-start pb-6 border-b border-surface-variant">
                     <div>
-                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Asset Name</p>
+                      <p className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Asset Name</p>
                       <h3 className="text-xl font-bold text-white flex items-center gap-2">
                         {proofData.file_name || 'Verified Hash'}
                         <CheckCircle size={16} className="text-emerald-500" />
                       </h3>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Anchored</p>
+                      <p className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Anchored</p>
                       <p className="text-sm font-medium text-white">{new Date(proofData.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
 
                   {/* Signature verification */}
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Timestamp</p>
-                      <p className="font-mono text-sm text-slate-200">{new Date(proofData.created_at).toISOString()}</p>
+                    <div className="bg-surface-container-lowest/50 p-4 rounded-lg border border-surface-variant">
+                      <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Timestamp</p>
+                      <p className="font-mono text-sm text-on-surface">{new Date(proofData.created_at).toISOString()}</p>
                     </div>
-                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Signature</p>
+                    <div className="bg-surface-container-lowest/50 p-4 rounded-lg border border-surface-variant">
+                      <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Signature</p>
                       {isSignatureValid === true && (
                         <p className="text-xs text-emerald-400 flex items-center gap-1"><CheckCircle size={14} /> Cryptographically Valid</p>
                       )}
@@ -379,9 +379,9 @@ export const PublicVerify = () => {
                   {/* Merkle path */}
                   <div>
                     <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-3">Merkle Path</h4>
-                    <div className="space-y-3 pl-4 border-l-2 border-slate-800">
-                      <div className="bg-slate-900 p-3 rounded-lg font-mono text-xs text-slate-200 border border-slate-800">
-                        <span className="text-slate-500 mr-2">ROOT:</span>
+                    <div className="space-y-3 pl-4 border-l-2 border-surface-variant">
+                      <div className="bg-slate-900 p-3 rounded-lg font-mono text-xs text-on-surface border border-surface-variant">
+                        <span className="text-on-surface-variant mr-2">ROOT:</span>
                         <span className="break-all">{proofData.versions?.merkle_root}</span>
                       </div>
                       <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-lg font-mono text-xs text-emerald-400">
@@ -392,14 +392,14 @@ export const PublicVerify = () => {
                   </div>
 
                   {/* Shareable link */}
-                  <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-4 flex items-center justify-between gap-4">
+                  <div className="bg-tertiary/5 border border-tertiary/20 rounded-lg p-4 flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-1">Shareable Proof Link</p>
-                      <p className="text-xs text-slate-400 font-mono break-all">{`${window.location.origin}/verify/${proofData.sha256_hash}`}</p>
+                      <p className="text-xs font-bold text-tertiary uppercase tracking-wider mb-1">Shareable Proof Link</p>
+                      <p className="text-xs text-on-surface-variant font-mono break-all">{`${window.location.origin}/verify/${proofData.sha256_hash}`}</p>
                     </div>
                     <button
                       onClick={() => navigator.clipboard.writeText(`${window.location.origin}/verify/${proofData.sha256_hash}`)}
-                      className="shrink-0 px-3 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-all"
+                      className="shrink-0 px-3 py-2 bg-tertiary hover:bg-tertiary text-white text-xs font-bold rounded-lg transition-all"
                     >
                       Copy
                     </button>
@@ -407,8 +407,8 @@ export const PublicVerify = () => {
                 </div>
 
                 {/* Footer actions */}
-                <div className="bg-slate-900/80 px-8 py-4 border-t border-slate-800 flex justify-between items-center">
-                  <button onClick={generateCertificatePdf} className="text-sm text-slate-400 hover:text-white flex items-center gap-2 transition-colors">
+                <div className="bg-slate-900/80 px-8 py-4 border-t border-surface-variant flex justify-between items-center">
+                  <button onClick={generateCertificatePdf} className="text-sm text-on-surface-variant hover:text-white flex items-center gap-2 transition-colors">
                     <Download size={16} /> Download PDF (with QR)
                   </button>
                 </div>
@@ -419,8 +419,8 @@ export const PublicVerify = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 mt-20 py-8">
-        <div className="max-w-6xl mx-auto px-6 flex justify-between items-center text-xs text-slate-500">
+      <footer className="border-t border-surface-variant mt-20 py-8">
+        <div className="max-w-6xl mx-auto px-6 flex justify-between items-center text-xs text-on-surface-variant">
           <p>© {new Date().getFullYear()} Entrustory. Cryptographic integrity infrastructure.</p>
           <div className="flex gap-6">
             <Link to="/docs/getting-started" className="hover:text-white transition-colors">Docs</Link>

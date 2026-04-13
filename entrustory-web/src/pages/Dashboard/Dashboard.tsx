@@ -92,8 +92,8 @@ export const Dashboard = () => {
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 relative overflow-hidden">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">System Health</h3>
-                <p className="text-xs text-slate-400 mt-1">Infrastructure Status</p>
+                <h3 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">System Health</h3>
+                <p className="text-xs text-on-surface-variant mt-1">Infrastructure Status</p>
               </div>
               <span className="material-symbols-outlined text-emerald-500 bg-emerald-50 p-1.5 rounded-full">check_circle</span>
             </div>
@@ -119,14 +119,14 @@ export const Dashboard = () => {
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Proofs</h3>
-                <p className="text-xs text-slate-400 mt-1">Secured records</p>
+                <h3 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Total Proofs</h3>
+                <p className="text-xs text-on-surface-variant mt-1">Secured records</p>
               </div>
               <span className="material-symbols-outlined text-blue-500 bg-blue-50 p-1.5 rounded-full">fingerprint</span>
             </div>
             <div className="flex items-end gap-2 mt-4">
               <span className="text-3xl font-bold text-slate-900">
-                {loading ? <Loader2 className="animate-spin text-slate-300" /> : animatedProofs}
+                {loading ? <Loader2 className="animate-spin text-on-surface" /> : animatedProofs}
               </span>
               {!loading && totalProofs > 0 && (
                 <span className="text-xs font-medium text-emerald-600 flex items-center mb-1">
@@ -140,8 +140,8 @@ export const Dashboard = () => {
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Pending Anchors</h3>
-                <p className="text-xs text-slate-400 mt-1">Requires L4 processing</p>
+                <h3 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Pending Anchors</h3>
+                <p className="text-xs text-on-surface-variant mt-1">Requires L4 processing</p>
               </div>
               <span className={`material-symbols-outlined p-1.5 rounded-full ${pendingAnchors > 0 ? 'text-amber-500 bg-amber-50' : 'text-emerald-500 bg-emerald-50'}`}>
                 {pendingAnchors > 0 ? 'pending_actions' : 'verified'}
@@ -149,9 +149,9 @@ export const Dashboard = () => {
             </div>
             <div className="flex items-end gap-2 mt-4">
               <span className="text-3xl font-bold text-slate-900">
-                {loading ? <Loader2 className="animate-spin text-slate-300" /> : animatedAnchors}
+                {loading ? <Loader2 className="animate-spin text-on-surface" /> : animatedAnchors}
               </span>
-              <span className="text-xs text-slate-500 mb-1">
+              <span className="text-xs text-on-surface-variant mb-1">
                 {pendingAnchors > 0 ? 'Awaiting batch transaction' : 'Blockchain synced'}
               </span>
             </div>
@@ -169,7 +169,7 @@ export const Dashboard = () => {
             
             <div className="overflow-auto flex-1">
               <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 sticky top-0 z-10">
+                <thead className="bg-slate-50 text-on-surface-variant font-medium border-b border-slate-200 sticky top-0 z-10">
                   <tr>
                     <th className="px-6 py-3 w-1/3">Project Name</th>
                     <th className="px-6 py-3">Version</th>
@@ -183,7 +183,7 @@ export const Dashboard = () => {
                     <TableRowSkeleton columns={5} rows={5} />
                   ) : workItems.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-10 text-slate-400">
+                      <td colSpan={5} className="text-center py-10 text-on-surface-variant">
                         No WorkItems found. Click "+ New WorkItem" to secure a file.
                       </td>
                     </tr>
@@ -201,7 +201,7 @@ export const Dashboard = () => {
                             </div>
                             <div>
                               <div className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors truncate max-w-[200px]">{item.name}</div>
-                              <div className="text-xs text-slate-400 font-mono">ID: {item.id?.split('-')[0]}</div>
+                              <div className="text-xs text-on-surface-variant font-mono">ID: {item.id?.split('-')[0]}</div>
                             </div>
                           </div>
                         </td>
@@ -210,14 +210,14 @@ export const Dashboard = () => {
                             {item.versions?.[0]?.version_tag || 'v1.0'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-slate-500 whitespace-nowrap">{timeAgo(item.created_at)}</td>
+                        <td className="px-6 py-4 text-on-surface-variant whitespace-nowrap">{timeAgo(item.created_at)}</td>
                         <td className="px-6 py-4">
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border bg-emerald-50 text-emerald-700 border-emerald-200">
                             <CheckCircle size={12} /> Verified
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button className="text-slate-400 hover:text-blue-600 p-1 transition-colors">
+                          <button className="text-on-surface-variant hover:text-blue-600 p-1 transition-colors">
                             <MoreVertical size={18} />
                           </button>
                         </td>
@@ -237,9 +237,9 @@ export const Dashboard = () => {
             <div className="overflow-auto flex-1 p-6">
               <div className="relative border-l border-slate-200 ml-3 space-y-8">
                 {loading ? (
-                   <p className="text-center text-slate-400 mt-4 text-sm">Loading logs...</p>
+                   <p className="text-center text-on-surface-variant mt-4 text-sm">Loading logs...</p>
                 ) : logs.length === 0 ? (
-                  <p className="text-center text-slate-400 mt-4 text-sm">No activity recorded yet.</p>
+                  <p className="text-center text-on-surface-variant mt-4 text-sm">No activity recorded yet.</p>
                 ) : (
                   logs.map((log) => {
                     let color = 'bg-slate-400 border-slate-400';
@@ -255,12 +255,12 @@ export const Dashboard = () => {
                             <span className="text-xs font-semibold capitalize text-slate-700">
                               {log.action_type.replace('_', ' ')}
                             </span>
-                            <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">{timeAgo(log.created_at)}</span>
+                            <span className="text-[10px] text-on-surface-variant whitespace-nowrap ml-2">{timeAgo(log.created_at)}</span>
                           </div>
                           <p className="text-sm text-slate-600 font-medium">
                             {(log.details as Record<string, string>)?.message || `System executed: ${log.action_type}`}
                           </p>
-                          <p className="text-[10px] text-slate-400 font-mono mt-1">ACTOR: {log.actor_id?.split('-')[0]}</p>
+                          <p className="text-[10px] text-on-surface-variant font-mono mt-1">ACTOR: {log.actor_id?.split('-')[0]}</p>
                         </div>
                       </div>
                     );

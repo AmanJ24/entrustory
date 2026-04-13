@@ -127,18 +127,18 @@ export const StatusPage = () => {
   }), []);
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-slate-100 font-['Inter']">
+    <div className="min-h-screen bg-surface text-on-surface font-['Inter']">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-[#0B1120]/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-surface-variant bg-surface/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-cyan-500/10 border border-cyan-500/30 rounded flex items-center justify-center text-cyan-400">
+            <div className="w-8 h-8 bg-tertiary/10 border border-tertiary/30 rounded flex items-center justify-center text-tertiary">
               <ShieldCheck size={20} />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-white">Entrustory</h1>
-            <span className="text-xs text-slate-500 font-medium">Status</span>
+            <span className="text-xs text-on-surface-variant font-medium">Status</span>
           </Link>
-          <Link to="/login" className="text-sm text-slate-400 hover:text-white transition-colors">Sign In</Link>
+          <Link to="/login" className="text-sm text-on-surface-variant hover:text-white transition-colors">Sign In</Link>
         </div>
       </header>
 
@@ -146,7 +146,7 @@ export const StatusPage = () => {
         {/* Overall status */}
         <div className="text-center mb-16">
           {loading ? (
-            <div className="w-16 h-16 rounded-full bg-slate-800 animate-pulse mx-auto mb-6" />
+            <div className="w-16 h-16 rounded-full bg-surface-variant animate-pulse mx-auto mb-6" />
           ) : (
             <div className={`w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center border-2 ${allOperational ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'}`}>
               {allOperational ? <CheckCircle size={32} /> : <Activity size={32} />}
@@ -155,35 +155,35 @@ export const StatusPage = () => {
           <h2 className="text-3xl font-bold text-white mb-2">
             {loading ? 'Checking...' : allOperational ? 'All Systems Operational' : 'Partial Degradation'}
           </h2>
-          <p className="text-slate-400">
+          <p className="text-on-surface-variant">
             Last checked: {new Date().toLocaleTimeString()} · Auto-refreshes every 30s
           </p>
         </div>
 
         {/* Global metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          <div className="bg-[#111722] border border-slate-800 rounded-xl p-4 text-center">
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Uptime (90d)</p>
+          <div className="bg-surface-container-low border border-surface-variant rounded-xl p-4 text-center">
+            <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-1">Uptime (90d)</p>
             <p className="text-2xl font-bold text-emerald-400">{uptime}%</p>
           </div>
-          <div className="bg-[#111722] border border-slate-800 rounded-xl p-4 text-center">
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Avg Latency</p>
+          <div className="bg-surface-container-low border border-surface-variant rounded-xl p-4 text-center">
+            <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-1">Avg Latency</p>
             <p className="text-2xl font-bold text-white">{avgLatency}ms</p>
           </div>
-          <div className="bg-[#111722] border border-slate-800 rounded-xl p-4 text-center">
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Total Proofs</p>
-            <p className="text-2xl font-bold text-cyan-400">{totalProofs.toLocaleString()}</p>
+          <div className="bg-surface-container-low border border-surface-variant rounded-xl p-4 text-center">
+            <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-1">Total Proofs</p>
+            <p className="text-2xl font-bold text-tertiary">{totalProofs.toLocaleString()}</p>
           </div>
-          <div className="bg-[#111722] border border-slate-800 rounded-xl p-4 text-center">
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Last Anchor</p>
+          <div className="bg-surface-container-low border border-surface-variant rounded-xl p-4 text-center">
+            <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-1">Last Anchor</p>
             <p className="text-sm font-bold text-white">{lastAnchor ? new Date(lastAnchor).toLocaleDateString() : 'Pending'}</p>
           </div>
         </div>
 
         {/* Service status list */}
-        <div className="bg-[#111722] border border-slate-800 rounded-xl overflow-hidden mb-12">
-          <div className="px-6 py-4 border-b border-slate-800 flex items-center gap-2">
-            <BarChart3 size={16} className="text-slate-400" />
+        <div className="bg-surface-container-low border border-surface-variant rounded-xl overflow-hidden mb-12">
+          <div className="px-6 py-4 border-b border-surface-variant flex items-center gap-2">
+            <BarChart3 size={16} className="text-on-surface-variant" />
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">Service Health</h3>
           </div>
           <div className="divide-y divide-slate-800/50">
@@ -191,10 +191,10 @@ export const StatusPage = () => {
               Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="px-6 py-5 flex items-center justify-between animate-pulse">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-800" />
-                    <div className="h-4 w-40 bg-slate-800 rounded" />
+                    <div className="w-8 h-8 rounded-full bg-surface-variant" />
+                    <div className="h-4 w-40 bg-surface-variant rounded" />
                   </div>
-                  <div className="h-4 w-24 bg-slate-800 rounded" />
+                  <div className="h-4 w-24 bg-surface-variant rounded" />
                 </div>
               ))
             ) : (
@@ -207,7 +207,7 @@ export const StatusPage = () => {
                     <span className="text-sm font-medium text-white">{m.name}</span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="text-xs font-mono text-slate-400">{m.latency}ms</span>
+                    <span className="text-xs font-mono text-on-surface-variant">{m.latency}ms</span>
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${statusColor(m.status)}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${m.status === 'operational' ? 'bg-emerald-500' : m.status === 'degraded' ? 'bg-amber-500' : 'bg-red-500'}`} />
                       {m.status}
@@ -220,7 +220,7 @@ export const StatusPage = () => {
         </div>
 
         {/* 90-day uptime chart */}
-        <div className="bg-[#111722] border border-slate-800 rounded-xl p-6">
+        <div className="bg-surface-container-low border border-surface-variant rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">90-Day Uptime</h3>
             <span className="text-xs text-emerald-400 font-bold">{uptime}%</span>
@@ -238,7 +238,7 @@ export const StatusPage = () => {
               />
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-[10px] text-slate-500">
+          <div className="flex justify-between mt-2 text-[10px] text-on-surface-variant">
             <span>90 days ago</span>
             <span>Today</span>
           </div>
@@ -246,8 +246,8 @@ export const StatusPage = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 mt-20 py-8">
-        <div className="max-w-4xl mx-auto px-6 flex justify-between items-center text-xs text-slate-500">
+      <footer className="border-t border-surface-variant mt-20 py-8">
+        <div className="max-w-4xl mx-auto px-6 flex justify-between items-center text-xs text-on-surface-variant">
           <p>© {new Date().getFullYear()} Entrustory</p>
           <div className="flex gap-6">
             <Link to="/verify" className="hover:text-white transition-colors">Verify</Link>

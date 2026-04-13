@@ -36,56 +36,56 @@ export const ActivityLog = () => {
     switch (actionType) {
       case 'workspace_created': return { icon: 'domain', color: 'text-blue-300', bg: 'bg-blue-900/20', border: 'border-blue-800' };
       case 'workitem_created': return { icon: 'lock', color: 'text-emerald-300', bg: 'bg-emerald-900/20', border: 'border-emerald-800' };
-      default: return { icon: 'info', color: 'text-slate-300', bg: 'bg-slate-800', border: 'border-slate-700' };
+      default: return { icon: 'info', color: 'text-on-surface', bg: 'bg-surface-variant', border: 'border-outline-variant' };
     }
   };
 
   return (
-    <div className="flex-1 w-full bg-[#111718] text-white font-['Space_Grotesk'] overflow-x-hidden p-4 md:p-6 lg:p-8">
+    <div className="flex-1 w-full bg-surface text-white font-['Space_Grotesk'] overflow-x-hidden p-4 md:p-6 lg:p-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-[#0dccf2] mb-1">
+          <div className="flex items-center gap-2 text-tertiary mb-1">
             <span className="material-symbols-outlined text-sm">verified_user</span>
             <span className="text-xs font-bold uppercase tracking-wider">Immutable Record</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Activity Audit Log</h1>
-          <p className="text-[#9cb5ba] max-w-2xl text-base">
+          <p className="text-on-surface-variant max-w-2xl text-base">
             Verifiable proof of all digital work within this workspace. All entries are cryptographically signed and immutable.
           </p>
         </div>
       </div>
 
-      <div className="bg-[#1b2527] rounded-xl border border-[#283639] shadow-sm overflow-hidden flex flex-col">
+      <div className="bg-surface-container rounded-xl border border-[#484848] shadow-sm overflow-hidden flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#111718] border-b border-[#283639]">
-                <th className="px-6 py-4 text-xs font-bold text-[#9cb5ba] uppercase tracking-wider w-[220px]">Timestamp (UTC)</th>
-                <th className="px-6 py-4 text-xs font-bold text-[#9cb5ba] uppercase tracking-wider w-[200px]">Actor</th>
-                <th className="px-6 py-4 text-xs font-bold text-[#9cb5ba] uppercase tracking-wider w-[200px]">Action Type</th>
-                <th className="px-6 py-4 text-xs font-bold text-[#9cb5ba] uppercase tracking-wider">Resource ID</th>
-                <th className="px-6 py-4 text-xs font-bold text-[#9cb5ba] uppercase tracking-wider text-center w-[100px]">Status</th>
+              <tr className="bg-surface border-b border-[#484848]">
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider w-[220px]">Timestamp (UTC)</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider w-[200px]">Actor</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider w-[200px]">Action Type</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Resource ID</th>
+                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider text-center w-[100px]">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#283639]">
+            <tbody className="divide-y divide-[#484848]">
               {loading ? (
-                <tr><td colSpan={5} className="p-8 text-center text-[#9cb5ba]"><Loader2 className="animate-spin mx-auto" /></td></tr>
+                <tr><td colSpan={5} className="p-8 text-center text-on-surface-variant"><Loader2 className="animate-spin mx-auto" /></td></tr>
               ) : logs.length === 0 ? (
-                <tr><td colSpan={5} className="p-8 text-center text-[#9cb5ba]">No activity recorded.</td></tr>
+                <tr><td colSpan={5} className="p-8 text-center text-on-surface-variant">No activity recorded.</td></tr>
               ) : (
                 logs.map(log => {
                   const style = getActionStyles(log.action_type);
                   return (
-                    <tr key={log.id} className="group hover:bg-[#283639]/30 transition-colors">
+                    <tr key={log.id} className="group hover:bg-outline-variant/30 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[16px] text-slate-400">schedule</span>
-                          <span className="text-sm font-medium text-slate-300">{formatDateUTC(log.created_at)}</span>
+                          <span className="material-symbols-outlined text-[16px] text-on-surface-variant">schedule</span>
+                          <span className="text-sm font-medium text-on-surface">{formatDateUTC(log.created_at)}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                          <div className="size-6 rounded-full bg-cyan-900/50 border border-cyan-700 text-cyan-400 flex items-center justify-center text-xs font-bold uppercase">
+                          <div className="size-6 rounded-full bg-surface-container-highest/50 border border-outline-variant text-tertiary flex items-center justify-center text-xs font-bold uppercase">
                             {user?.email?.charAt(0) || 'U'}
                           </div>
                           <span className="text-sm font-medium text-white">{log.actor_id === user?.id ? 'You' : 'System'}</span>
@@ -98,7 +98,7 @@ export const ActivityLog = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="font-mono text-xs text-[#9cb5ba] bg-[#111718] px-2 py-1 rounded border border-[#283639]">
+                        <span className="font-mono text-xs text-on-surface-variant bg-surface px-2 py-1 rounded border border-[#484848]">
                           {log.resource_id ? log.resource_id.split('-')[0] : 'System'}
                         </span>
                       </td>

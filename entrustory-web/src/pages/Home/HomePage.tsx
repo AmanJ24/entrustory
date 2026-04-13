@@ -1,379 +1,597 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { supabase } from '../../utils/supabase';
 
-export const HomePage = () => {
+/* ── tiny scroll-reveal hook ───────────────────────────────── */
+function useReveal(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.unobserve(el); } },
+      { threshold },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return { ref, visible };
+}
+
+/* ── animated counter ──────────────────────────────────────── */
+function Counter({ end, suffix = '', duration = 2000 }: { end: number; suffix?: string; duration?: number }) {
+  const [count, setCount] = useState(0);
+  const { ref, visible } = useReveal(0.3);
+  useEffect(() => {
+    if (!visible) return;
+    let start = 0;
+    const step = Math.ceil(end / (duration / 16));
+    const id = setInterval(() => {
+      start += step;
+      if (start >= end) { setCount(end); clearInterval(id); }
+      else setCount(start);
+    }, 16);
+    return () => clearInterval(id);
+  }, [visible, end, duration]);
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+}
+
+/* ── particle canvas for hero ──────────────────────────────── */
+function ParticleCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    let animId: number;
+    let w = 0, h = 0;
+    const particles: { x: number; y: number; vx: number; vy: number; r: number; o: number }[] = [];
+
+    function resize() {
+      w = canvas!.width = canvas!.offsetWidth * devicePixelRatio;
+      h = canvas!.height = canvas!.offsetHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+
+    function init() {
+      resize();
+      const count = Math.min(120, Math.floor((w * h) / 12000));
+      particles.length = 0;
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * (w / devicePixelRatio),
+          y: Math.random() * (h / devicePixelRatio),
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4,
+          r: Math.random() * 1.5 + 0.5,
+          o: Math.random() * 0.5 + 0.1,
+        });
+      }
+    }
+
+    function draw() {
+      const cw = w / devicePixelRatio;
+      const ch = h / devicePixelRatio;
+      ctx.clearRect(0, 0, cw, ch);
+
+      // draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.strokeStyle = `rgba(255,177,72,${0.08 * (1 - dist / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // draw particles
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > cw) p.vx *= -1;
+        if (p.y < 0 || p.y > ch) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(198,198,199,${p.o})`;
+        ctx.fill();
+      }
+      animId = requestAnimationFrame(draw);
+    }
+
+    init();
+    draw();
+    window.addEventListener('resize', init);
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', init); };
+  }, []);
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />;
+}
+
+/* ── live stats hook ───────────────────────────────────────── */
+function useLiveStats() {
+  const [hashCount, setHashCount] = useState(0);
+  const [recentHashes, setRecentHashes] = useState<string[]>([]);
+  useEffect(() => {
+    async function fetch() {
+      try {
+        const { count } = await supabase.from('evidence_hashes').select('*', { count: 'exact', head: true });
+        if (count !== null) setHashCount(count);
+
+        const { data } = await supabase.from('evidence_hashes').select('sha256_hash').order('created_at', { ascending: false }).limit(20);
+        if (data && data.length > 0) {
+          setRecentHashes(data.map((d: { sha256_hash: string }) => d.sha256_hash));
+        }
+      } catch { /* silent — fallback to 0 / empty */ }
+    }
+    fetch();
+  }, []);
+  return { hashCount, recentHashes };
+}
+
+/* ── live hash ticker ──────────────────────────────────────── */
+function HashTicker({ seedHashes }: { seedHashes: string[] }) {
+  const [hashes, setHashes] = useState<string[]>([]);
+  const poolRef = useRef<string[]>([]);
+  useEffect(() => {
+    poolRef.current = seedHashes;
+  }, [seedHashes]);
+
+  useEffect(() => {
+    function next() {
+      const pool = poolRef.current;
+      if (pool.length > 0) return pool[Math.floor(Math.random() * pool.length)];
+      return Array.from({ length: 64 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+    }
+    setHashes([next(), next(), next()]);
+    const id = setInterval(() => {
+      setHashes(prev => [next(), ...prev].slice(0, 5));
+    }, 2800);
+    return () => clearInterval(id);
+  }, []);
   return (
-    <div className="antialiased overflow-x-hidden selection:bg-[#44d8f1]/30 selection:text-[#44d8f1] bg-[#0f131d] text-[#dfe2f1] min-h-screen">
-      <style>{`
-        .hero-gradient {
-          background: radial-gradient(circle at 50% -20%, rgba(68, 216, 241, 0.15) 0%, rgba(15, 19, 29, 0) 60%);
-        }
-        .glass-effect {
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-        }
-        .glow-border:hover {
-          box-shadow: 0 0 20px rgba(68, 216, 241, 0.2);
-        }
-      `}</style>
+    <div className="font-mono text-[10px] leading-relaxed space-y-1 text-outline overflow-hidden">
+      {hashes.map((h, i) => (
+        <div key={h + i} className="animate-fade-in-down flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-tertiary inline-block shrink-0 animate-pulse" />
+          <span className="truncate opacity-60">{h}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-[#0f131d]/80 backdrop-blur-xl shadow-[0_8px_30px_rgb(223,226,241,0.04)]">
-        <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
-          <div className="text-xl font-black text-[#44d8f1] tracking-tighter">
+/* ══════════════════════════════════════════════════════════════
+   MAIN PAGE
+   ══════════════════════════════════════════════════════════════ */
+export const HomePage = () => {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const { hashCount, recentHashes } = useLiveStats();
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
+
+  // reveal refs
+  const r1 = useReveal();
+  const r2 = useReveal();
+  const r3 = useReveal();
+  const r4 = useReveal();
+  const r5 = useReveal();
+  const r6 = useReveal();
+
+  return (
+    <div className="bg-surface min-h-screen text-on-surface font-body relative overflow-x-hidden selection:bg-tertiary/30 selection:text-tertiary">
+
+      {/* ─── NAV ───────────────────────────────────────────── */}
+      <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? 'bg-black/90 backdrop-blur-2xl shadow-2xl shadow-black/40 py-3' : 'bg-transparent py-5'}`}>
+        <nav className="flex justify-between items-center max-w-[1440px] mx-auto px-6 md:px-12">
+          <Link to="/" className="text-2xl font-headline font-bold tracking-tighter text-white hover:text-tertiary transition-colors duration-300">
             Entrustory
+          </Link>
+
+          {/* Desktop links */}
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#platform" className="nav-link">Platform</a>
+            <a href="#architecture" className="nav-link">Architecture</a>
+            <a href="#developers" className="nav-link">Developers</a>
+            <Link to="/docs" className="nav-link">Docs</Link>
+            <Link to="/status" className="nav-link">Status</Link>
           </div>
-          <div className="hidden md:flex items-center space-x-8">
-            <a className="font-bold tracking-tight text-sm text-[#44d8f1] border-b-2 border-[#44d8f1] pb-1" href="#platform">Platform</a>
-            <a className="font-bold tracking-tight text-sm text-[#dfe2f1]/70 hover:text-[#44d8f1] transition-colors" href="#developers">Developers</a>
-            <a className="font-bold tracking-tight text-sm text-[#dfe2f1]/70 hover:text-[#44d8f1] transition-colors" href="#how-it-works">Security</a>
-            <a className="font-bold tracking-tight text-sm text-[#dfe2f1]/70 hover:text-[#44d8f1] transition-colors" href="#cta">Pricing</a>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Link to="/login" className="font-bold tracking-tight text-sm text-[#dfe2f1]/70 hover:text-[#44d8f1] transition-colors px-4 py-2 hover:bg-[#313540]/50 rounded-lg">
-              Sign In
-            </Link>
-            <Link to="/login" className="bg-gradient-to-br from-[#44d8f1] to-[#00bcd4] text-[#00363e] font-bold tracking-tight text-sm px-6 py-2.5 rounded-lg active:scale-95 duration-200 shadow-lg shadow-[#44d8f1]/10">
+
+          <div className="hidden md:flex items-center gap-4">
+            <Link to="/login" className="nav-link">Sign In</Link>
+            <Link to="/login" className="bg-white text-black font-headline font-bold text-sm px-6 py-2.5 rounded hover:bg-tertiary hover:text-black transition-all duration-300 active:scale-95">
               Get Started
             </Link>
           </div>
-        </div>
-      </nav>
 
-      <main className="relative">
-        {/* Hero Section */}
-        <section className="relative pt-40 pb-24 px-8 hero-gradient">
-          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
-            <div className="z-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#313540]/50 border border-[#3c494c]/20 mb-8">
-                <span className="w-2 h-2 rounded-full bg-[#45fec9] animate-pulse"></span>
-                <span className="text-[10px] uppercase tracking-widest font-bold text-[#45fec9]">v2.4 Integrity Protocol Live</span>
+          {/* Mobile hamburger */}
+          <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden text-white">
+            <span className="material-symbols-outlined text-2xl">{mobileMenu ? 'close' : 'menu'}</span>
+          </button>
+        </nav>
+
+        {/* Mobile menu */}
+        {mobileMenu && (
+          <div className="md:hidden bg-black/95 backdrop-blur-2xl border-t border-outline-variant/20 px-6 py-6 space-y-4 animate-fade-in-down">
+            <a href="#platform" onClick={() => setMobileMenu(false)} className="block text-sm text-zinc-300 hover:text-white">Platform</a>
+            <a href="#architecture" onClick={() => setMobileMenu(false)} className="block text-sm text-zinc-300 hover:text-white">Architecture</a>
+            <a href="#developers" onClick={() => setMobileMenu(false)} className="block text-sm text-zinc-300 hover:text-white">Developers</a>
+            <Link to="/docs" className="block text-sm text-zinc-300 hover:text-white">Docs</Link>
+            <Link to="/status" className="block text-sm text-zinc-300 hover:text-white">Status</Link>
+            <div className="pt-4 border-t border-outline-variant/20 flex flex-col gap-3">
+              <Link to="/login" className="text-sm text-zinc-300 hover:text-white">Sign In</Link>
+              <Link to="/login" className="bg-white text-black font-bold text-sm px-6 py-2.5 rounded text-center">Get Started</Link>
+            </div>
+          </div>
+        )}
+      </header>
+
+      <main>
+        {/* ─── HERO: full-bleed immersive ──────────────────── */}
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+          {/* Particle network background */}
+          <ParticleCanvas />
+
+          {/* Gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-surface z-[1]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent z-[1]" />
+
+          {/* Grid overlay for techno feel */}
+          <div className="absolute inset-0 z-[1] opacity-[0.03]" style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
+            backgroundSize: '60px 60px'
+          }} />
+
+          {/* Hero content */}
+          <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
+            {/* Status badge */}
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-outline-variant/20 backdrop-blur-sm mb-10 animate-fade-in-down">
+              <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
+              <span className="text-[11px] uppercase tracking-[0.15em] font-bold text-tertiary">Integrity Protocol Active</span>
+            </div>
+
+            <h1 className="font-headline font-bold tracking-tighter text-white mb-8 leading-[0.95] animate-hero-title"
+                style={{ fontSize: 'clamp(2.8rem, 8vw, 7rem)' }}>
+              Digital Integrity,<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-primary to-tertiary">Engineered.</span>
+            </h1>
+
+            <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in-up animation-delay-300">
+              Programmable, zero-knowledge infrastructure for tamper-evident proof of every digital asset,
+              anchored to cryptographic truth.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up animation-delay-500">
+              <Link to="/login" className="group bg-white text-black font-headline font-bold px-10 py-4 rounded hover:shadow-[0_0_40px_rgba(255,177,72,0.3)] transition-all duration-500 active:scale-95 flex items-center gap-3 justify-center">
+                Start Building
+                <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              </Link>
+              <a href="#architecture" className="border border-outline-variant/40 text-zinc-300 font-headline font-bold px-10 py-4 rounded hover:bg-white/5 hover:border-outline-variant transition-all duration-500 flex items-center gap-3 justify-center">
+                Explore Architecture
+                <span className="material-symbols-outlined text-lg">expand_more</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Scroll indicator */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 animate-bounce-slow">
+            <span className="material-symbols-outlined text-zinc-500 text-3xl">keyboard_arrow_down</span>
+          </div>
+        </section>
+
+        {/* ─── TRUST METRICS ──────────────────────────────── */}
+        <section className="py-20 border-t border-b border-outline-variant/10 bg-surface-container-lowest">
+          <div ref={r1.ref} className={`max-w-[1440px] mx-auto px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-8 transition-all duration-1000 ${r1.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-headline font-bold text-white mb-2">
+                <Counter end={hashCount} suffix="+" />
               </div>
-              <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] text-[#dfe2f1] mb-6">
-                Digital Integrity <br />
-                <span className="text-[#44d8f1]">Infrastructure</span> <br />
-                for the Modern Era
-              </h1>
-              <p className="text-lg text-[#bbc9cc] max-w-xl mb-10 leading-relaxed">
-                A programmable, version-aware platform providing verifiable proof of digital work. Move beyond static timestamps to dynamic lifecycle integrity.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                <Link to="/login" className="bg-gradient-to-br from-[#44d8f1] to-[#00bcd4] text-[#00363e] font-bold px-8 py-4 rounded-xl flex items-center gap-3 transition-all hover:translate-y-[-2px] hover:shadow-[0_8px_30px_rgba(68,216,241,0.3)]">
-                  Start Building
-                  <span className="material-symbols-outlined">arrow_forward</span>
+              <div className="text-xs uppercase tracking-[0.15em] text-outline font-label">Hashes Anchored</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-headline font-bold text-white mb-2">
+                <Counter end={99} suffix=".99%" duration={1500} />
+              </div>
+              <div className="text-xs uppercase tracking-[0.15em] text-outline font-label">Uptime SLA</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-headline font-bold text-tertiary mb-2">
+                <Counter end={0} suffix=" breaches" duration={500} />
+              </div>
+              <div className="text-xs uppercase tracking-[0.15em] text-outline font-label">Since Genesis</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-headline font-bold text-white mb-2">
+                {'<'}<Counter end={50} suffix="ms" duration={1000} />
+              </div>
+              <div className="text-xs uppercase tracking-[0.15em] text-outline font-label">Proof Latency</div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── PLATFORM FEATURES ──────────────────────────── */}
+        <section id="platform" className="py-32 px-6 md:px-12">
+          <div ref={r2.ref} className={`max-w-[1440px] mx-auto transition-all duration-1000 ${r2.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+            <div className="text-center mb-20">
+              <span className="text-tertiary text-xs font-bold uppercase tracking-[0.2em] font-label">Capabilities</span>
+              <h2 className="font-headline text-4xl md:text-6xl font-bold text-white mt-4 tracking-tighter">Four Layers of Trust</h2>
+              <p className="text-outline mt-4 max-w-lg mx-auto">An unbroken chain from the browser to the blockchain.</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-1">
+              {[
+                { icon: 'fingerprint', label: 'LAYER 01', title: 'Client Hashing', desc: 'SHA-256 computed entirely in-browser. Your raw data never leaves your device.', color: 'text-white' },
+                { icon: 'account_tree', label: 'LAYER 02', title: 'Merkle Trees', desc: 'Deterministic, lexicographically sorted trees with O(log n) inclusion proofs.', color: 'text-primary' },
+                { icon: 'verified_user', label: 'LAYER 03', title: 'Ed25519 Signing', desc: 'The Merkle Root is signed via asymmetric cryptography with precise UTC timestamps.', color: 'text-tertiary' },
+                { icon: 'link', label: 'LAYER 04', title: 'Blockchain Anchor', desc: 'Super Roots are committed to a public chain for permanent, decentralized trust.', color: 'text-white' },
+              ].map((item, i) => (
+                <div key={i} className="group bg-surface-container-low hover:bg-surface-container-high p-10 transition-all duration-500 border border-transparent hover:border-outline-variant/20 relative overflow-hidden cursor-default"
+                     style={{ transitionDelay: `${i * 100}ms` }}>
+                  <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-tertiary to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                  <span className={`material-symbols-outlined text-4xl ${item.color} mb-6 block group-hover:scale-110 transition-transform duration-500`}>{item.icon}</span>
+                  <div className="text-tertiary text-[10px] font-bold tracking-[0.2em] font-label mb-3">{item.label}</div>
+                  <h3 className="font-headline text-xl font-bold text-white mb-3">{item.title}</h3>
+                  <p className="text-sm text-on-surface-variant leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── ARCHITECTURE (immersive split) ──────────────── */}
+        <section id="architecture" className="py-32 px-6 md:px-12 bg-surface-container-lowest relative overflow-hidden">
+          {/* Subtle animated grid background */}
+          <div className="absolute inset-0 blueprint-grid opacity-[0.04]" />
+
+          <div ref={r3.ref} className={`max-w-[1440px] mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10 transition-all duration-1000 ${r3.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+            <div>
+              <span className="text-tertiary text-xs font-bold uppercase tracking-[0.2em] font-label">Architecture</span>
+              <h2 className="font-headline text-4xl md:text-5xl font-bold text-white mt-4 mb-8 tracking-tighter">The Architecture<br />of Certainty</h2>
+
+              <div className="space-y-10">
+                {[
+                  { num: '01', title: 'Zero-Knowledge Proofs', desc: 'Validate integrity without exposing underlying data. Privacy by design, verified by mathematics.' },
+                  { num: '02', title: 'Merkle Tree Engine', desc: 'Recursive hashing ensuring every record is tethered to the genesis block of your ledger.' },
+                  { num: '03', title: 'Immutable Audit Trail', desc: 'Append-only logs with PL/pgSQL triggers that block any UPDATE or DELETE on cryptographic records.' },
+                ].map((item, i) => (
+                  <div key={i} className="group flex gap-6 cursor-default">
+                    <div className="shrink-0 w-12 h-12 border border-outline-variant/30 flex items-center justify-center font-headline font-bold text-sm text-tertiary group-hover:bg-tertiary/10 group-hover:border-tertiary/40 transition-all duration-500">
+                      {item.num}
+                    </div>
+                    <div>
+                      <h3 className="font-headline text-xl font-bold text-white mb-2 group-hover:text-tertiary transition-colors duration-300">{item.title}</h3>
+                      <p className="text-on-surface-variant text-sm leading-relaxed max-w-sm">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Live hash feed + diagram */}
+            <div className="relative">
+              <div className="bg-surface-container border border-outline-variant/20 p-8 relative overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-tertiary font-bold">Live Integrity Feed</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-outline-variant">v4.02</span>
+                </div>
+
+                {/* Merkle visualization */}
+                <div className="flex flex-col items-center gap-4 mb-8">
+                  <div className="w-14 h-14 border border-tertiary/60 flex items-center justify-center animate-pulse-slow">
+                    <span className="material-symbols-outlined text-tertiary">hub</span>
+                  </div>
+                  <div className="w-px h-8 bg-outline-variant/40" />
+                  <div className="flex gap-16">
+                    {['lock', 'shield'].map((icon, i) => (
+                      <div key={i} className="flex flex-col items-center gap-3">
+                        <div className="w-10 h-10 border border-outline-variant/40 flex items-center justify-center hover:border-primary/60 transition-colors duration-500">
+                          <span className="material-symbols-outlined text-on-surface-variant text-sm">{icon}</span>
+                        </div>
+                        <div className="w-px h-5 bg-outline-variant/30" />
+                        <div className="flex gap-4">
+                          <div className="w-5 h-5 border border-outline-variant/20 hover:border-tertiary/40 transition-colors" />
+                          <div className="w-5 h-5 border border-outline-variant/20 hover:border-tertiary/40 transition-colors" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Live hash feed */}
+                <div className="border-t border-outline-variant/15 pt-6">
+                  <div className="text-[10px] font-mono text-outline-variant uppercase tracking-widest mb-3">Recent Anchors</div>
+                  <HashTicker seedHashes={recentHashes} />
+                </div>
+
+                {/* Status badge */}
+                <div className="mt-6 flex justify-between items-center">
+                  <div className="text-[10px] font-mono text-outline-variant">
+                    X: 44.029 · Y: 12.883 · Z: 99.110
+                  </div>
+                  <div className="px-3 py-1 bg-tertiary/10 border border-tertiary/30 inline-flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse" />
+                    <span className="text-[10px] text-tertiary font-bold tracking-wider">AUTHENTICATED</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── DEVELOPER SECTION ─────────────────────────── */}
+        <section id="developers" className="py-32 px-6 md:px-12">
+          <div ref={r4.ref} className={`max-w-[1440px] mx-auto grid lg:grid-cols-2 gap-16 items-center transition-all duration-1000 ${r4.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+            <div>
+              <span className="text-tertiary text-xs font-bold uppercase tracking-[0.2em] font-label">For Developers</span>
+              <h2 className="font-headline text-4xl md:text-5xl font-bold text-white mt-4 mb-8 tracking-tighter">
+                Integration in minutes.<br />Security forever.
+              </h2>
+              <div className="space-y-8">
+                {[
+                  { icon: 'terminal', title: 'CLI & SDK', desc: 'Anchor any file from terminal or integrate via our Node.js SDK.' },
+                  { icon: 'webhook', title: 'Real-time Webhooks', desc: 'Get notified instantly when a proof is anchored to the ledger.' },
+                  { icon: 'key', title: 'API Key Scopes', desc: 'Fine-grained permissions for workspace-level access control.' },
+                  { icon: 'deployed_code', title: 'GitHub Action', desc: 'Automatically anchor every build artifact in your CI/CD pipeline.' },
+                ].map((item, i) => (
+                  <div key={i} className="group flex gap-5 cursor-default">
+                    <div className="shrink-0 w-11 h-11 bg-surface-container-low border border-outline-variant/15 flex items-center justify-center group-hover:border-tertiary/30 transition-all duration-500">
+                      <span className="material-symbols-outlined text-on-surface-variant group-hover:text-tertiary transition-colors">{item.icon}</span>
+                    </div>
+                    <div>
+                      <h4 className="font-headline font-bold text-white mb-1">{item.title}</h4>
+                      <p className="text-sm text-on-surface-variant">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Code block */}
+            <div className="relative">
+              <div className="absolute -inset-4 bg-tertiary/5 blur-3xl rounded-full" />
+              <div className="relative bg-surface-container-lowest border border-outline-variant/20 overflow-hidden shadow-2xl shadow-black/40">
+                <div className="flex items-center justify-between px-5 py-3 bg-surface-container border-b border-outline-variant/10">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500/20" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/20" />
+                    <div className="w-3 h-3 rounded-full bg-green-500/20" />
+                  </div>
+                  <span className="text-[10px] font-mono text-outline-variant">anchor.js</span>
+                </div>
+                <pre className="p-6 font-mono text-sm leading-7 overflow-x-auto">
+<code><span className="text-tertiary">import</span> {'{ Entrust }'} <span className="text-tertiary">from</span> <span className="text-green-400">'entrustory'</span>;{'\n'}
+{'\n'}
+<span className="text-outline-variant">// Initialize with scoped key</span>{'\n'}
+<span className="text-tertiary">const</span> client = <span className="text-tertiary">new</span> Entrust(process.env.KEY);{'\n'}
+{'\n'}
+<span className="text-tertiary">async function</span> <span className="text-white">protect</span>() {'{'}{'\n'}
+  <span className="text-tertiary">const</span> proof = <span className="text-tertiary">await</span> client.anchor({'{'}{'\n'}
+    assetId: <span className="text-green-400">'doc_0842'</span>,{'\n'}
+    hash:    <span className="text-green-400">'sha256:7f83b...'</span>{'\n'}
+  {'}'});{'\n'}
+{'\n'}
+  console.log(proof.root);{'\n'}
+  <span className="text-outline-variant">// → "0xae4f...c912"</span>{'\n'}
+{'}'}</code>
+                </pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── BENTO SHOWCASE ─────────────────────────────── */}
+        <section className="py-24 px-6 md:px-12">
+          <div ref={r5.ref} className={`max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-1 transition-all duration-1000 ${r5.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+
+            <div className="md:col-span-2 bg-surface-container-high hover:bg-surface-container-highest p-12 min-h-[320px] flex flex-col justify-between transition-all duration-700 group cursor-default">
+              <h4 className="font-headline text-3xl font-bold text-white max-w-xs group-hover:text-tertiary transition-colors duration-500">Encrypted Vault Storage</h4>
+              <div className="flex justify-between items-end">
+                <p className="text-on-surface-variant text-sm max-w-[240px]">AES-256-GCM encrypted client-side before upload. We never see your files.</p>
+                <span className="material-symbols-outlined text-primary text-4xl group-hover:scale-110 transition-transform duration-500">enhanced_encryption</span>
+              </div>
+            </div>
+
+            <div className="bg-surface-container-low hover:bg-surface-container p-12 min-h-[320px] flex flex-col justify-between transition-all duration-700 group cursor-default">
+              <h4 className="font-headline text-3xl font-bold text-white group-hover:text-tertiary transition-colors duration-500">PDF Certificates</h4>
+              <div className="flex flex-col gap-4">
+                <div className="h-1 w-full bg-outline-variant/20 overflow-hidden">
+                  <div className="h-full w-0 group-hover:w-full bg-gradient-to-r from-tertiary to-primary transition-all duration-1000 ease-out" />
+                </div>
+                <p className="text-on-surface-variant text-sm">Legal-grade evidence exports with hashes, Merkle paths, and QR codes.</p>
+              </div>
+            </div>
+
+            <div className="bg-surface-container-low hover:bg-surface-container p-12 min-h-[320px] flex flex-col justify-between transition-all duration-700 group cursor-default">
+              <span className="material-symbols-outlined text-tertiary text-4xl group-hover:rotate-12 transition-transform duration-500">monitoring</span>
+              <h4 className="font-headline text-3xl font-bold text-white group-hover:text-tertiary transition-colors duration-500">Live Status</h4>
+              <p className="text-on-surface-variant text-sm">Real-time latency checks and 90-day uptime chart at <Link to="/status" className="text-tertiary hover:underline">/status</Link>.</p>
+            </div>
+
+            <div className="md:col-span-2 bg-surface-container-highest hover:bg-surface-bright p-12 min-h-[320px] relative overflow-hidden flex flex-col justify-center transition-all duration-700 group cursor-default">
+              <div className="relative z-10">
+                <h4 className="font-headline text-4xl md:text-5xl font-bold text-white mb-4 group-hover:text-tertiary transition-colors duration-500">Public Verification</h4>
+                <p className="text-on-surface-variant max-w-sm mb-8">Anyone can verify a file at <Link to="/verify" className="text-tertiary hover:underline">/verify</Link> — no account needed.</p>
+                <Link to="/verify" className="inline-flex items-center gap-2 bg-white text-black font-headline font-bold px-8 py-3 rounded hover:shadow-[0_0_30px_rgba(255,177,72,0.2)] transition-all duration-500 active:scale-95">
+                  Try Verification
+                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
                 </Link>
-                <div className="group relative">
-                  <div className="flex items-center gap-3 bg-[#0a0e18] border border-[#3c494c]/30 px-5 py-4 rounded-xl font-mono text-sm text-[#bbc9cc]">
-                    <span className="text-[#44d8f1]">$</span>
-                    <span>npm install entrustory</span>
-                    <span className="material-symbols-outlined text-xs cursor-pointer hover:text-[#44d8f1] transition-colors">content_copy</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="relative lg:h-[600px] flex items-center justify-center">
-              {/* Abstract Merkle Visualization */}
-              <div className="relative w-full aspect-square max-w-md bg-gradient-to-tr from-[#44d8f1]/10 to-transparent rounded-full flex items-center justify-center">
-                <div className="absolute inset-0 border border-[#44d8f1]/10 rounded-full animate-[spin_60s_linear_infinite]"></div>
-                <div className="absolute inset-8 border border-[#45fec9]/10 rounded-full animate-[spin_45s_linear_infinite_reverse]"></div>
-                <div className="grid grid-cols-3 gap-8 relative z-10">
-                  <div className="w-16 h-16 bg-[#1c1f2a] border border-[#44d8f1]/40 rounded-xl flex items-center justify-center shadow-2xl shadow-[#44d8f1]/20">
-                    <span className="material-symbols-outlined text-[#44d8f1]">hub</span>
-                  </div>
-                  <div className="w-16 h-16 bg-[#1c1f2a] border border-[#3c494c]/40 rounded-xl translate-y-8 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[#bbc9cc]">data_object</span>
-                  </div>
-                  <div className="w-16 h-16 bg-[#1c1f2a] border border-[#45fec9]/40 rounded-xl flex items-center justify-center shadow-2xl shadow-[#45fec9]/20">
-                    <span className="material-symbols-outlined text-[#45fec9]">security</span>
-                  </div>
-                </div>
-                {/* Glow effect behind nodes */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-30">
-                  <div className="w-64 h-64 bg-[#44d8f1]/10 rounded-full blur-3xl"></div>
-                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Core Capabilities */}
-        <section id="platform" className="py-24 px-8 relative bg-[#171b26]">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col items-center text-center mb-16">
-              <h2 className="text-sm font-bold tracking-[0.2em] text-[#45fec9] uppercase mb-4">Foundation of Trust</h2>
-              <h3 className="text-3xl md:text-4xl font-bold text-[#dfe2f1]">Built for Immutable Confidence</h3>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {/* Card 1 */}
-              <div className="bg-[#1c1f2a] p-8 rounded-2xl border border-[#3c494c]/10 hover:border-[#44d8f1]/30 transition-all duration-500 group">
-                <div className="w-14 h-14 bg-[#44d8f1]/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-[#44d8f1] text-3xl">lock_open</span>
-                </div>
-                <h4 className="text-xl font-bold mb-4 text-[#dfe2f1]">Client-Side Hashing</h4>
-                <p className="text-[#bbc9cc] text-sm leading-relaxed mb-6">
-                  Secure your data at the source. Generate cryptographic fingerprints locally before they ever touch the network.
-                </p>
-                <ul className="space-y-3">
-                  <li className="flex items-center gap-2 text-xs text-[#bbc9cc]">
-                    <span className="material-symbols-outlined text-[#45fec9] text-lg">check_circle</span>
-                    Zero-Knowledge Architecture
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-[#bbc9cc]">
-                    <span className="material-symbols-outlined text-[#45fec9] text-lg">check_circle</span>
-                    Native Browser Support
-                  </li>
-                </ul>
-              </div>
-              {/* Card 2 */}
-              <div className="bg-[#1c1f2a] p-8 rounded-2xl border border-[#3c494c]/10 hover:border-[#45fec9]/30 transition-all duration-500 group">
-                <div className="w-14 h-14 bg-[#45fec9]/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-[#45fec9] text-3xl">account_tree</span>
-                </div>
-                <h4 className="text-xl font-bold mb-4 text-[#dfe2f1]">Merkle Tree System</h4>
-                <p className="text-[#bbc9cc] text-sm leading-relaxed mb-6">
-                  Aggregate millions of hashes into a single root for efficient, low-cost verification at enterprise scale.
-                </p>
-                <ul className="space-y-3">
-                  <li className="flex items-center gap-2 text-xs text-[#bbc9cc]">
-                    <span className="material-symbols-outlined text-[#45fec9] text-lg">check_circle</span>
-                    Linear Scalability
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-[#bbc9cc]">
-                    <span className="material-symbols-outlined text-[#45fec9] text-lg">check_circle</span>
-                    Fraud Proof Verification
-                  </li>
-                </ul>
-              </div>
-              {/* Card 3 */}
-              <div className="bg-[#1c1f2a] p-8 rounded-2xl border border-[#3c494c]/10 hover:border-[#44d8f1]/30 transition-all duration-500 group">
-                <div className="w-14 h-14 bg-[#44d8f1]/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-[#44d8f1] text-3xl">layers</span>
-                </div>
-                <h4 className="text-xl font-bold mb-4 text-[#dfe2f1]">Multi-Layer Proof</h4>
-                <p className="text-[#bbc9cc] text-sm leading-relaxed mb-6">
-                  Independent verification layers across distributed ledgers ensure your integrity outlasts any single provider.
-                </p>
-                <ul className="space-y-3">
-                  <li className="flex items-center gap-2 text-xs text-[#bbc9cc]">
-                    <span className="material-symbols-outlined text-[#45fec9] text-lg">check_circle</span>
-                    Multi-Chain Anchoring
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-[#bbc9cc]">
-                    <span className="material-symbols-outlined text-[#45fec9] text-lg">check_circle</span>
-                    Timestamped Durability
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* How it Works */}
-        <section id="how-it-works" className="py-24 px-8 relative overflow-hidden bg-[#0f131d]">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-20">The Lifecycle of Integrity</h2>
-            <div className="relative flex flex-col md:flex-row justify-between items-center gap-12">
-              {/* Connector line */}
-              <div className="hidden md:block absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#3c494c] to-transparent -z-0"></div>
-              {/* Step 1 */}
-              <div className="flex flex-col items-center text-center max-w-[200px]">
-                <div className="w-20 h-20 rounded-full bg-[#1c1f2a] flex items-center justify-center border-4 border-[#0f131d] relative z-10 shadow-xl">
-                  <span className="material-symbols-outlined text-[#44d8f1] text-3xl">fingerprint</span>
-                </div>
-                <h4 className="mt-6 font-bold text-[#dfe2f1]">1. Hash</h4>
-                <p className="text-xs text-[#bbc9cc] mt-2">Generate a unique SHA-256 fingerprint of your data locally.</p>
-              </div>
-              {/* Step 2 */}
-              <div className="flex flex-col items-center text-center max-w-[200px]">
-                <div className="w-20 h-20 rounded-full bg-[#1c1f2a] flex items-center justify-center border-4 border-[#0f131d] relative z-10 shadow-xl">
-                  <span className="material-symbols-outlined text-[#45fec9] text-3xl">signature</span>
-                </div>
-                <h4 className="mt-6 font-bold text-[#dfe2f1]">2. Sign</h4>
-                <p className="text-xs text-[#bbc9cc] mt-2">Bundle and anchor the hash to our high-performance infrastructure.</p>
-              </div>
-              {/* Step 3 */}
-              <div className="flex flex-col items-center text-center max-w-[200px]">
-                <div className="w-20 h-20 rounded-full bg-[#1c1f2a] flex items-center justify-center border-4 border-[#0f131d] relative z-10 shadow-xl">
-                  <span className="material-symbols-outlined text-[#44d8f1] text-3xl">verified</span>
-                </div>
-                <h4 className="mt-6 font-bold text-[#dfe2f1]">3. Verify</h4>
-                <p className="text-xs text-[#bbc9cc] mt-2">Provide cryptographically verifiable proof of existence and state.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Developer Workflows */}
-        <section id="developers" className="py-24 px-8 bg-[#0a0e18]">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div>
-                <h2 className="text-sm font-bold tracking-[0.2em] text-[#44d8f1] uppercase mb-4">Built for Builders</h2>
-                <h3 className="text-4xl font-bold text-[#dfe2f1] mb-8 leading-tight">Integration in minutes,<br />Security forever</h3>
-                <div className="space-y-8">
-                  <div className="flex gap-6">
-                    <div className="w-12 h-12 shrink-0 bg-[#1c1f2a] rounded-lg flex items-center justify-center border border-[#3c494c]/20">
-                      <span className="material-symbols-outlined text-[#44d8f1]">webhook</span>
-                    </div>
-                    <div>
-                      <h5 className="font-bold text-[#dfe2f1] mb-1">Real-time Webhooks</h5>
-                      <p className="text-sm text-[#bbc9cc]">Get notified the instant a proof is anchored to the global ledger.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-6">
-                    <div className="w-12 h-12 shrink-0 bg-[#1c1f2a] rounded-lg flex items-center justify-center border border-[#3c494c]/20">
-                      <span className="material-symbols-outlined text-[#44d8f1]">key</span>
-                    </div>
-                    <div>
-                      <h5 className="font-bold text-[#dfe2f1] mb-1">Granular API Scopes</h5>
-                      <p className="text-sm text-[#bbc9cc]">Control access with fine-grained permissions for specific environments.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-6">
-                    <div className="w-12 h-12 shrink-0 bg-[#1c1f2a] rounded-lg flex items-center justify-center border border-[#3c494c]/20">
-                      <span className="material-symbols-outlined text-[#44d8f1]">code</span>
-                    </div>
-                    <div>
-                      <h5 className="font-bold text-[#dfe2f1] mb-1">SDK &amp; CLI Support</h5>
-                      <p className="text-sm text-[#bbc9cc]">Native libraries for Node, Go, Python, and a powerful command line tool.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* Code Block */}
-              <div className="relative">
-                <div className="absolute -inset-4 bg-[#44d8f1]/5 blur-3xl rounded-full"></div>
-                <div className="relative bg-[#1c1f2a] rounded-2xl overflow-hidden border border-[#3c494c]/20 shadow-2xl">
-                  <div className="flex items-center justify-between px-6 py-4 bg-[#0a0e18] border-b border-[#3c494c]/10">
-                    <div className="flex gap-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500/30"></div>
-                      <div className="w-3 h-3 rounded-full bg-yellow-500/30"></div>
-                      <div className="w-3 h-3 rounded-full bg-green-500/30"></div>
-                    </div>
-                    <span className="text-[10px] text-[#bbc9cc]/50 font-mono">verify_asset.js</span>
-                  </div>
-                  <div className="p-8 font-mono text-sm leading-relaxed">
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">01</span>
-                      <span><span className="text-[#00bcd4]">import</span> <span className="text-[#dfe2f1]">{'{ Entrust }'}</span> <span className="text-[#00bcd4]">from</span> <span className="text-[#45fec9]">'entrustory'</span>;</span>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">02</span>
-                      <span>&nbsp;</span>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">03</span>
-                      <span className="text-[#bbc9cc]/50">// Initialize with scoped key</span>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">04</span>
-                      <span><span className="text-[#00bcd4]">const</span> <span className="text-[#dfe2f1]">client = </span><span className="text-[#00bcd4]">new</span> <span className="text-[#dfe2f1]">Entrust(process.env.KEY);</span></span>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">05</span>
-                      <span>&nbsp;</span>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">06</span>
-                      <span><span className="text-[#00bcd4]">async function</span> <span className="text-[#dfe2f1]">protect() {'{'}</span></span>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">07</span>
-                      <span className="text-[#dfe2f1]">  <span className="text-[#00bcd4]">const</span> proof = <span className="text-[#00bcd4]">await</span> client.anchor({'{'}</span>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">08</span>
-                      <span className="text-[#dfe2f1]">    assetId: <span className="text-[#45fec9]">'doc_0842'</span>,</span>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">09</span>
-                      <span className="text-[#dfe2f1]">    hash: <span className="text-[#45fec9]">'sha256:7f83b...'</span></span>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">10</span>
-                      <span className="text-[#dfe2f1]">  {'}'});</span>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">11</span>
-                      <span className="text-[#dfe2f1]">  console.log(proof.root);</span>
-                    </div>
-                    <div className="flex gap-4">
-                      <span className="text-[#bbc9cc]/30 select-none">12</span>
-                      <span className="text-[#dfe2f1]">{'}'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Final Call to Action */}
-        <section id="cta" className="py-32 px-8 text-center bg-gradient-to-b from-[#0f131d] to-[#0f131d]">
-          <div className="max-w-4xl mx-auto glass-effect bg-[#1c1f2a]/30 p-16 rounded-[2rem] border border-[#3c494c]/10">
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-6">Ready to anchor your data?</h2>
-            <p className="text-[#bbc9cc] text-lg mb-10 max-w-2xl mx-auto">
-              Join the thousands of developers building verifiable applications with Entrustory's digital integrity infrastructure.
+        {/* ─── CTA ────────────────────────────────────────── */}
+        <section className="py-40 px-6 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-surface via-surface-container-lowest to-surface" />
+          <div ref={r6.ref} className={`relative z-10 max-w-3xl mx-auto text-center transition-all duration-1000 ${r6.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+            <h2 className="font-headline text-4xl md:text-6xl font-bold text-white mb-6 tracking-tighter">
+              Future-proof your<br />digital legacy.
+            </h2>
+            <p className="text-on-surface-variant text-lg mb-12 leading-relaxed max-w-xl mx-auto">
+              Join the network securing their digital future with cryptographic permanence. Engineered for enterprises that demand integrity.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/login" className="bg-[#44d8f1] text-[#00363e] font-bold px-10 py-4 rounded-xl hover:shadow-[0_0_20px_rgba(68,216,241,0.4)] transition-all">
-                Get API Key
+              <Link to="/login" className="group bg-white text-black font-headline font-bold px-12 py-5 rounded hover:shadow-[0_0_60px_rgba(255,177,72,0.25)] transition-all duration-500 active:scale-95 flex items-center gap-3 justify-center">
+                Request Access
+                <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
               </Link>
-              <a href="#developers" className="bg-[#313540] text-[#dfe2f1] font-bold px-10 py-4 rounded-xl border border-[#3c494c] hover:bg-[#353944] transition-all">
-                Read Documentation
-              </a>
+              <Link to="/docs" className="border border-outline-variant/40 text-zinc-300 font-headline font-bold px-12 py-5 rounded hover:bg-white/5 hover:border-outline-variant transition-all duration-500 flex items-center gap-3 justify-center">
+                View Documentation
+              </Link>
             </div>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#0a0e18] w-full py-12 border-t border-[#3c494c]/15">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 px-8 max-w-7xl mx-auto mb-12">
-          <div>
-            <div className="text-lg font-bold text-[#44d8f1] mb-6">Entrustory</div>
-            <p className="text-[#dfe2f1]/50 text-xs leading-relaxed">
-              The backbone for digital asset verification and lifecycle integrity at a global scale.
+      {/* ─── FOOTER ───────────────────────────────────────── */}
+      <footer className="bg-black w-full py-20 px-6 md:px-12 border-t border-outline-variant/10">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-12 max-w-[1440px] mx-auto">
+          <div className="col-span-2">
+            <Link to="/" className="text-xl font-headline font-bold text-white mb-6 block hover:text-tertiary transition-colors">Entrustory</Link>
+            <p className="text-[11px] uppercase tracking-[0.05em] text-zinc-500 max-w-[220px] leading-relaxed">
+              Programmable, Zero-Knowledge Digital Integrity Infrastructure.
+              <br /><br />© {new Date().getFullYear()} Entrustory. All rights reserved.
             </p>
           </div>
-          <div>
-            <h6 className="text-[#dfe2f1] font-bold text-sm mb-6 uppercase tracking-widest">Company</h6>
-            <ul className="space-y-3">
-              <li><a className="text-[#dfe2f1]/50 text-xs hover:text-[#44d8f1] transition-colors hover:translate-x-1 inline-block duration-300" href="#">About</a></li>
-              <li><a className="text-[#dfe2f1]/50 text-xs hover:text-[#44d8f1] transition-colors hover:translate-x-1 inline-block duration-300" href="#">Blog</a></li>
-              <li><a className="text-[#dfe2f1]/50 text-xs hover:text-[#44d8f1] transition-colors hover:translate-x-1 inline-block duration-300" href="#">Careers</a></li>
-            </ul>
+          <div className="flex flex-col gap-3">
+            <span className="text-[11px] uppercase tracking-[0.1em] text-white font-bold mb-2 font-label">Platform</span>
+            <a href="#platform" className="footer-link">Features</a>
+            <a href="#architecture" className="footer-link">Architecture</a>
+            <Link to="/verify" className="footer-link">Verify</Link>
+            <Link to="/status" className="footer-link">Status</Link>
           </div>
-          <div>
-            <h6 className="text-[#dfe2f1] font-bold text-sm mb-6 uppercase tracking-widest">Product</h6>
-            <ul className="space-y-3">
-              <li><Link className="text-[#dfe2f1]/50 text-xs hover:text-[#44d8f1] transition-colors hover:translate-x-1 inline-block duration-300" to="/verify">Verify</Link></li>
-              <li><Link className="text-[#dfe2f1]/50 text-xs hover:text-[#44d8f1] transition-colors hover:translate-x-1 inline-block duration-300" to="/status">Status</Link></li>
-              <li><a className="text-[#dfe2f1]/50 text-xs hover:text-[#44d8f1] transition-colors hover:translate-x-1 inline-block duration-300" href="#">Roadmap</a></li>
-            </ul>
+          <div className="flex flex-col gap-3">
+            <span className="text-[11px] uppercase tracking-[0.1em] text-white font-bold mb-2 font-label">Developers</span>
+            <a href="#developers" className="footer-link">SDK</a>
+            <Link to="/docs" className="footer-link">Documentation</Link>
+            <a href="https://github.com/AmanJ24/entrustory" target="_blank" rel="noopener noreferrer" className="footer-link">GitHub</a>
           </div>
-          <div>
-            <h6 className="text-[#dfe2f1] font-bold text-sm mb-6 uppercase tracking-widest">Legal</h6>
-            <ul className="space-y-3">
-              <li><a className="text-[#dfe2f1]/50 text-xs hover:text-[#44d8f1] transition-colors hover:translate-x-1 inline-block duration-300" href="#">Privacy</a></li>
-              <li><a className="text-[#dfe2f1]/50 text-xs hover:text-[#44d8f1] transition-colors hover:translate-x-1 inline-block duration-300" href="#">Terms</a></li>
-              <li><a className="text-[#dfe2f1]/50 text-xs hover:text-[#44d8f1] transition-colors hover:translate-x-1 inline-block duration-300" href="#">GDPR</a></li>
-            </ul>
+          <div className="flex flex-col gap-3">
+            <span className="text-[11px] uppercase tracking-[0.1em] text-white font-bold mb-2 font-label">Legal</span>
+            <a href="#" className="footer-link">Privacy Policy</a>
+            <a href="#" className="footer-link">Terms of Service</a>
+            <a href="#" className="footer-link">Security</a>
           </div>
-        </div>
-        <div className="px-8 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-8 border-t border-[#3c494c]/10 gap-4">
-          <div className="text-xs text-[#dfe2f1]/50">
-            © 2024 Entrustory. Digital Integrity Infrastructure.
-          </div>
-          <div className="flex gap-6">
-            <a className="text-[#dfe2f1]/50 hover:text-[#44d8f1] transition-colors" href="#">
-              <span className="material-symbols-outlined text-sm">public</span>
-            </a>
-            <a className="text-[#dfe2f1]/50 hover:text-[#44d8f1] transition-colors" href="#">
-              <span className="material-symbols-outlined text-sm">hub</span>
-            </a>
-            <a className="text-[#dfe2f1]/50 hover:text-[#44d8f1] transition-colors" href="#">
-              <span className="material-symbols-outlined text-sm">chat</span>
-            </a>
+          <div className="flex flex-col gap-3">
+            <span className="text-[11px] uppercase tracking-[0.1em] text-white font-bold mb-2 font-label">Connect</span>
+            <a href="https://github.com/AmanJ24/entrustory" target="_blank" rel="noopener noreferrer" className="footer-link">GitHub</a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="footer-link">Twitter / X</a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="footer-link">LinkedIn</a>
           </div>
         </div>
       </footer>

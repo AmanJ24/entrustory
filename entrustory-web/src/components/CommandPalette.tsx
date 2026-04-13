@@ -107,12 +107,12 @@ export const CommandPalette = () => {
 
       {/* Palette */}
       <div
-        className="relative w-full max-w-xl bg-[#111722] border border-slate-700 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="relative w-full max-w-xl bg-surface-container-low border border-outline-variant rounded-2xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-800">
-          <Search size={18} className="text-slate-400 shrink-0" />
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-surface-variant">
+          <Search size={18} className="text-on-surface-variant shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -120,9 +120,9 @@ export const CommandPalette = () => {
             onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
             onKeyDown={handleKeyDown}
             placeholder="Search commands..."
-            className="flex-1 bg-transparent text-white text-sm outline-none placeholder-slate-500"
+            className="flex-1 bg-transparent text-white text-sm outline-none placeholder-on-surface-variant"
           />
-          <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-400 font-mono">
+          <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-surface-variant border border-outline-variant rounded text-[10px] text-on-surface-variant font-mono">
             ESC
           </kbd>
         </div>
@@ -130,13 +130,13 @@ export const CommandPalette = () => {
         {/* Results */}
         <div className="max-h-[320px] overflow-y-auto py-2">
           {filteredCommands.length === 0 ? (
-            <div className="px-5 py-8 text-center text-slate-500 text-sm">
+            <div className="px-5 py-8 text-center text-on-surface-variant text-sm">
               No commands found for "{query}"
             </div>
           ) : (
             Object.entries(groupedCommands).map(([category, items]) => (
               <div key={category}>
-                <div className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <div className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
                   {category}
                 </div>
                 {items.map((cmd) => {
@@ -148,14 +148,14 @@ export const CommandPalette = () => {
                       onMouseEnter={() => setSelectedIndex(flatIndex)}
                       className={`w-full flex items-center gap-3 px-5 py-2.5 text-sm transition-colors ${
                         flatIndex === selectedIndex
-                          ? 'bg-cyan-500/10 text-cyan-400'
-                          : 'text-slate-300 hover:bg-slate-800/50'
+                          ? 'bg-tertiary/10 text-tertiary'
+                          : 'text-on-surface hover:bg-surface-variant/50'
                       }`}
                     >
-                      <span className={flatIndex === selectedIndex ? 'text-cyan-400' : 'text-slate-500'}>{cmd.icon}</span>
+                      <span className={flatIndex === selectedIndex ? 'text-tertiary' : 'text-on-surface-variant'}>{cmd.icon}</span>
                       <span className="flex-1 text-left font-medium">{cmd.label}</span>
                       {cmd.shortcut && (
-                        <kbd className="text-[10px] font-mono text-slate-500 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded">
+                        <kbd className="text-[10px] font-mono text-on-surface-variant bg-surface-variant border border-outline-variant px-1.5 py-0.5 rounded">
                           {cmd.shortcut}
                         </kbd>
                       )}
@@ -168,10 +168,10 @@ export const CommandPalette = () => {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-800 px-5 py-3 flex items-center justify-between text-[10px] text-slate-500">
+        <div className="border-t border-surface-variant px-5 py-3 flex items-center justify-between text-[10px] text-on-surface-variant">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 bg-slate-800 border border-slate-700 rounded font-mono">↑↓</kbd> Navigate</span>
-            <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 bg-slate-800 border border-slate-700 rounded font-mono">↵</kbd> Select</span>
+            <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 bg-surface-variant border border-outline-variant rounded font-mono">↑↓</kbd> Navigate</span>
+            <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 bg-surface-variant border border-outline-variant rounded font-mono">↵</kbd> Select</span>
           </div>
           <span className="flex items-center gap-1">
             <Command size={10} /> Entrustory

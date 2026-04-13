@@ -108,11 +108,11 @@ export const NewWorkItemModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#111722] border border-slate-800 rounded-xl shadow-2xl w-full max-w-md p-6 relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white"><X size={20} /></button>
+      <div className="bg-surface-container-low border border-surface-variant rounded-xl shadow-2xl w-full max-w-md p-6 relative">
+        <button onClick={onClose} className="absolute top-4 right-4 text-on-surface-variant hover:text-white"><X size={20} /></button>
         
         <h2 className="text-xl font-bold text-white mb-2 font-display">New WorkItem</h2>
-        <p className="text-sm text-slate-400 mb-6">Securely hash and anchor a new digital asset.</p>
+        <p className="text-sm text-on-surface-variant mb-6">Securely hash and anchor a new digital asset.</p>
 
         {status === 'success' ? (
           <div className="flex flex-col items-center justify-center py-10 text-emerald-400 animate-in zoom-in">
@@ -123,53 +123,53 @@ export const NewWorkItemModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
           <div className="flex flex-col items-center justify-center py-8 text-amber-400 animate-in zoom-in">
             <AlertTriangle size={48} className="mb-4 drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]" />
             <h3 className="text-xl font-bold">Duplicate Detected</h3>
-            <button onClick={() => {setStatus('idle'); setFile(null);}} className="mt-6 px-6 py-2 bg-slate-800 text-white rounded-lg">Select Different File</button>
+            <button onClick={() => {setStatus('idle'); setFile(null);}} className="mt-6 px-6 py-2 bg-surface-variant text-white rounded-lg">Select Different File</button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Project Name</label>
-              <input type="text" required value={projectName} onChange={e => setProjectName(e.target.value)} className="w-full bg-[#0B1120] border border-slate-700 rounded-lg px-4 py-2.5 text-white outline-none focus:border-cyan-500" placeholder="e.g. Acme Corp NDA" />
+              <label className="block text-sm font-medium text-on-surface mb-1">Project Name</label>
+              <input type="text" required value={projectName} onChange={e => setProjectName(e.target.value)} className="w-full bg-surface border border-outline-variant rounded-lg px-4 py-2.5 text-white outline-none focus:border-tertiary" placeholder="e.g. Acme Corp NDA" />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Target File</label>
-              <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-700 bg-[#0B1120] hover:bg-slate-800/50 transition-colors rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer">
+              <label className="block text-sm font-medium text-on-surface mb-1">Target File</label>
+              <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-outline-variant bg-surface hover:bg-surface-variant/50 transition-colors rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer">
                 <input type="file" required className="hidden" ref={fileInputRef} onChange={e => setFile(e.target.files?.[0] || null)} />
-                <UploadCloud size={24} className={file ? 'text-cyan-500' : 'text-slate-500'} />
-                <span className="text-sm text-slate-300 mt-2 truncate w-full text-center">{file ? file.name : 'Click to select file'}</span>
+                <UploadCloud size={24} className={file ? 'text-tertiary' : 'text-on-surface-variant'} />
+                <span className="text-sm text-on-surface mt-2 truncate w-full text-center">{file ? file.name : 'Click to select file'}</span>
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 p-3 rounded-lg border border-slate-700 bg-slate-800/30">
+            <div className="flex flex-col gap-3 p-3 rounded-lg border border-outline-variant bg-surface-variant/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-start gap-3">
-                  <Database className={`mt-0.5 ${storeInVault ? 'text-cyan-400' : 'text-slate-500'}`} size={18} />
+                  <Database className={`mt-0.5 ${storeInVault ? 'text-tertiary' : 'text-on-surface-variant'}`} size={18} />
                   <div>
                     <p className="text-sm font-medium text-white">Store in Vault</p>
-                    <p className="text-[10px] text-slate-400">Keep an AES-256 encrypted copy on our servers.</p>
+                    <p className="text-[10px] text-on-surface-variant">Keep an AES-256 encrypted copy on our servers.</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" className="sr-only peer" checked={storeInVault} onChange={(e) => setStoreInVault(e.target.checked)} />
-                  <div className="w-9 h-5 bg-slate-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                  <div className="w-9 h-5 bg-slate-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-tertiary"></div>
                 </label>
               </div>
 
               {/* Password Input (Only shows if Vault is ON) */}
               {storeInVault && (
                 <div className="relative animate-in fade-in slide-in-from-top-2">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
                   <input 
                     type="password" required={storeInVault} value={encryptionPassword} onChange={e => setEncryptionPassword(e.target.value)}
                     placeholder="Enter an encryption password"
-                    className="w-full bg-[#0B1120] border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-white outline-none focus:border-cyan-500"
+                    className="w-full bg-surface border border-outline-variant rounded-lg pl-9 pr-4 py-2 text-sm text-white outline-none focus:border-tertiary"
                   />
                 </div>
               )}
             </div>
 
-            <button type="submit" disabled={status !== 'idle' || !file || !projectName} className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 mt-2 transition-all">
+            <button type="submit" disabled={status !== 'idle' || !file || !projectName} className="w-full bg-tertiary hover:bg-tertiary disabled:opacity-50 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 mt-2 transition-all">
               {status === 'hashing' && <><Loader2 size={18} className="animate-spin" /> Hashing locally...</>}
               {status === 'encrypting' && <><Loader2 size={18} className="animate-spin" /> Encrypting AES-256...</>}
               {status === 'uploading' && <><Loader2 size={18} className="animate-spin" /> Uploading to Vault...</>}

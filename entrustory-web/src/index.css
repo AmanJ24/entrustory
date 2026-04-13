@@ -7,7 +7,7 @@
 
 @layer base {
   body {
-    @apply bg-background-app text-slate-100 font-sans antialiased selection:bg-primary selection:text-background-dark overflow-x-hidden;
+    @apply bg-background text-on-background font-body antialiased selection:bg-tertiary selection:text-on-tertiary overflow-x-hidden;
   }
 }
 
@@ -17,14 +17,14 @@
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #111718;
+  background: #0e0e0e;
 }
 ::-webkit-scrollbar-thumb {
-  background: #283639;
+  background: #262626;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b5054;
+  background: #484848;
 }
 
 /* Glass Card Utility from Landing Page */
@@ -35,3 +35,76 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
+
+.text-huge {
+  font-size: clamp(3.5rem, 10vw, 8rem);
+  line-height: 0.9;
+}
+.blueprint-grid {
+  background-image: linear-gradient(to right, #484848 1px, transparent 1px),
+                    linear-gradient(to bottom, #484848 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center;
+}
+
+/* ── Navigation & Footer link utilities ──────────────────── */
+.nav-link {
+  @apply font-headline tracking-tight text-sm text-zinc-400 hover:text-white transition-colors duration-300 relative;
+}
+.nav-link::after {
+  content: '';
+  @apply absolute -bottom-1 left-0 w-0 h-0.5 bg-tertiary transition-all duration-300;
+}
+.nav-link:hover::after {
+  @apply w-full;
+}
+
+.footer-link {
+  @apply text-[11px] uppercase tracking-[0.05em] text-zinc-500 hover:text-tertiary transition-colors duration-300 hover:translate-x-1 inline-block;
+}
+
+/* ── Keyframe Animations ─────────────────────────────────── */
+@keyframes fade-in-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes hero-title {
+  from { opacity: 0; transform: translateY(40px) scale(0.97); letter-spacing: 0.05em; }
+  to   { opacity: 1; transform: translateY(0) scale(1); letter-spacing: -0.05em; }
+}
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0) translateX(-50%); }
+  50%      { transform: translateY(12px) translateX(-50%); }
+}
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.8s ease-out both;
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.9s ease-out both;
+}
+.animate-hero-title {
+  animation: hero-title 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-bounce-slow {
+  animation: bounce-slow 2.5s ease-in-out infinite;
+}
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+/* Animation delays */
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-700 { animation-delay: 700ms; }
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }

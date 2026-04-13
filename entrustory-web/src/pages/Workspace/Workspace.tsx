@@ -51,7 +51,7 @@ export const Workspace = () => {
     fetchWorkItemData();
   }, [id]);
 
-  if (loading && !workItem) return <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-cyan-500 w-8 h-8" /></div>;
+  if (loading && !workItem) return <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-tertiary w-8 h-8" /></div>;
   if (!workItem) return <div className="p-10 text-white">WorkItem not found.</div>;
 
   const activeVersionIndex = workItem.versions?.findIndex((v: any) => v.id === selectedVersionId) ?? 0;
@@ -147,17 +147,17 @@ export const Workspace = () => {
           <div className="h-14 border-b border-[#2A2E3D] bg-[#14161F] px-6 flex justify-between items-center sticky top-0 z-10 shrink-0">
             <div className="flex items-center gap-3">
               <h1 className="font-bold text-lg">{workItem.name}</h1>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-mono border ${activeVersionIndex === 0 ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-slate-800 text-slate-300 border-slate-600'}`}>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-mono border ${activeVersionIndex === 0 ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-surface-variant text-on-surface border-outline'}`}>
                 VIEWING: {activeVersion?.version_tag}
               </span>
             </div>
             <div className="flex items-center gap-3">
               {fileData?.storage_path && (
-                <button onClick={triggerDownloadProcess} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white border border-slate-700 bg-slate-800 hover:bg-slate-700 rounded transition-colors">
-                  <Download size={14} /> Download {fileData.is_encrypted && <Lock size={12} className="ml-1 text-cyan-400" />}
+                <button onClick={triggerDownloadProcess} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-on-surface hover:text-white border border-outline-variant bg-surface-variant hover:bg-slate-700 rounded transition-colors">
+                  <Download size={14} /> Download {fileData.is_encrypted && <Lock size={12} className="ml-1 text-tertiary" />}
                 </button>
               )}
-              <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-[#0dccf2] hover:bg-cyan-400 text-[#0B1120] rounded transition-colors shadow-[0_0_15px_rgba(13,204,242,0.3)]">
+              <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-[#ffb148] hover:bg-tertiary text-[#0e0e0e] rounded transition-colors shadow-[0_0_15px_rgba(13,204,242,0.3)]">
                 <Plus size={14} /> Add New Version
               </button>
             </div>
@@ -271,22 +271,22 @@ export const Workspace = () => {
       {/* DECRYPT MODAL */}
       {isDecryptModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111722] border border-slate-800 rounded-xl shadow-2xl w-full max-w-sm p-6 relative">
-            <button onClick={() => {setIsDecryptModalOpen(false); setDownloadPassword('');}} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+          <div className="bg-surface-container-low border border-surface-variant rounded-xl shadow-2xl w-full max-w-sm p-6 relative">
+            <button onClick={() => {setIsDecryptModalOpen(false); setDownloadPassword('');}} className="absolute top-4 right-4 text-on-surface-variant hover:text-white">
               <X size={20} />
             </button>
             <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-              <Lock size={20} className="text-cyan-400" /> Encrypted Vault
+              <Lock size={20} className="text-tertiary" /> Encrypted Vault
             </h2>
-            <p className="text-sm text-slate-400 mb-4">Enter the vault password to decrypt this file locally.</p>
+            <p className="text-sm text-on-surface-variant mb-4">Enter the vault password to decrypt this file locally.</p>
             <input 
               type="password" value={downloadPassword} onChange={e => setDownloadPassword(e.target.value)}
               placeholder="Vault Password"
-              className="w-full bg-[#0B1120] border border-slate-700 rounded-lg px-4 py-2.5 text-white outline-none focus:border-cyan-500 mb-4"
+              className="w-full bg-surface border border-outline-variant rounded-lg px-4 py-2.5 text-white outline-none focus:border-tertiary mb-4"
             />
             <button 
               onClick={() => executeDownload(true)} disabled={!downloadPassword || isDecrypting}
-              className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2"
+              className="w-full bg-tertiary hover:bg-tertiary disabled:opacity-50 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2"
             >
               {isDecrypting ? <><Loader2 size={16} className="animate-spin" /> Decrypting...</> : 'Unlock & Download'}
             </button>

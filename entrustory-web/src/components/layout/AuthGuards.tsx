@@ -8,8 +8,8 @@ export const ProtectedRoute = () => {
 
   if (loading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#0B1120]">
-        <Loader2 className="animate-spin text-cyan-500 w-10 h-10" />
+      <div className="h-screen w-screen flex items-center justify-center bg-surface">
+        <Loader2 className="animate-spin text-tertiary w-10 h-10" />
       </div>
     );
   }
@@ -24,8 +24,8 @@ export const PublicRoute = () => {
 
   if (loading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#0B1120]">
-        <Loader2 className="animate-spin text-cyan-500 w-10 h-10" />
+      <div className="h-screen w-screen flex items-center justify-center bg-surface">
+        <Loader2 className="animate-spin text-tertiary w-10 h-10" />
       </div>
     );
   }
