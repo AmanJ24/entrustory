@@ -32,6 +32,10 @@ export const NewWorkItemModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !user || !projectName) return;
+    if (file.size === 0) {
+      toast.error("Cannot submit an empty file. Please select a valid file.");
+      return;
+    }
     if (storeInVault && !encryptionPassword) {
       toast.error("Please provide an encryption password for the Vault.");
       return;
