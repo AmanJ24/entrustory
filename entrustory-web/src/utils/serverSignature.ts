@@ -34,11 +34,24 @@ const bytesToHex = (bytes: Uint8Array): string => {
  * In production, only the PUBLIC key lives here.
  * The private key lives in the Supabase Edge Function environment.
  *
- * These are development-only keys. Replace with real keys in production.
+ * PRODUCTION: Set VITE_ED25519_PUBLIC_KEY in your .env to the hex-encoded
+ * public key that corresponds to the ED25519_PRIVATE_KEY secret set on
+ * the Supabase Edge Function. You can get it from the sign-merkle-root
+ * function response's `public_key` field on first deploy.
+ *
+ * DEVELOPMENT fallback: If the env var is not set, keys are derived from
+ * the hardcoded dev private key below (only valid when the Edge Function
+ * is NOT deployed and local fallback signing is used instead).
  */
 const DEV_PRIVATE_KEY_HEX = '4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb';
 const DEV_PRIVATE_KEY = hexToBytes(DEV_PRIVATE_KEY_HEX);
-const PUBLIC_KEY = ed25519.getPublicKey(DEV_PRIVATE_KEY);
+
+// If a public key is explicitly provided via env, use it (production).
+// Otherwise derive it from the dev private key (local fallback only).
+const PUBLIC_KEY_HEX = import.meta.env.VITE_ED25519_PUBLIC_KEY as string | undefined;
+const PUBLIC_KEY: Uint8Array = PUBLIC_KEY_HEX
+  ? hexToBytes(PUBLIC_KEY_HEX)
+  : ed25519.getPublicKey(DEV_PRIVATE_KEY);
 
 // ─── Signing (Server-side in production) ──────────────────────
 
@@ -104,11 +117,15 @@ export const verifyServerSignature = async (
   signature: string
 ): Promise<boolean> => {
   try {
+    // Normalize timestamp to the format produced by `new Date().toISOString()`.
+    // Postgres reformats timestamps (e.g. +00:00 instead of Z), which breaks the exact string signature matching!
+    const normalizedTimestamp = new Date(timestamp).toISOString();
+
     // Handle Ed25519 signatures
     if (signature.startsWith('ed25519:')) {
       const sigHex = signature.replace('ed25519:', '');
       const sigBytes = hexToBytes(sigHex);
-      const message = new TextEncoder().encode(`${merkleRoot}:${timestamp}`);
+      const message = new TextEncoder().encode(`${merkleRoot}:${normalizedTimestamp}`);
       return ed25519.verify(sigBytes, message, PUBLIC_KEY);
     }
 
@@ -122,7 +139,7 @@ export const verifyServerSignature = async (
         'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
       );
 
-      const dataToSign = encoder.encode(`${merkleRoot}:${timestamp}`);
+      const dataToSign = encoder.encode(`${merkleRoot}:${normalizedTimestamp}`);
       const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, dataToSign);
       const expectedSig = Array.from(new Uint8Array(signatureBuffer))
         .map((b) => b.toString(16).padStart(2, '0'))
