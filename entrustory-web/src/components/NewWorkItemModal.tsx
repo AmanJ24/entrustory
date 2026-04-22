@@ -133,7 +133,7 @@ export const NewWorkItemModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-on-surface mb-1">Project Name</label>
-              <input type="text" required value={projectName} onChange={e => setProjectName(e.target.value)} className="w-full bg-surface border border-outline-variant rounded-lg px-4 py-2.5 text-white outline-none focus:border-tertiary" placeholder="e.g. Acme Corp NDA" />
+              <input type="text" required value={projectName} onChange={e => setProjectName(e.target.value)} className="w-full bg-surface border border-outline-variant rounded-lg px-4 py-2.5 text-white outline-none focus:border-tertiary" placeholder="e.g. Research Paper" />
             </div>
             
             <div>

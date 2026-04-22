@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { 
-  Fingerprint, LayoutDashboard, Folders, ShieldCheck, DownloadCloud, 
+  LayoutDashboard, Folders, ShieldCheck, DownloadCloud, 
   History, Key, Users, Bell, Plus, Search, ChevronDown, LogOut, CreditCard, Settings as SettingsIcon
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -9,6 +9,7 @@ import { supabase } from '../../utils/supabase';
 import { timeAgo } from '../../utils/format';
 import { NewWorkItemModal } from '../NewWorkItemModal';
 import type { AuditLog, WorkspaceData } from '../../types';
+import { LogoIcon } from '../Logo';
 
 
 
@@ -105,8 +106,8 @@ export const AppLayout = () => {
       <header className="h-14 bg-surface border-b border-surface-variant flex items-center justify-between px-6 shrink-0 z-30">
         <div className="flex items-center gap-6">
           <Link to="/app/dashboard" className="flex items-center gap-2 text-white font-['Space_Grotesk'] font-bold text-xl tracking-tight">
-            <div className="text-tertiary">
-              <Fingerprint size={24} />
+            <div className="w-6 h-6 text-tertiary">
+              <LogoIcon className="w-full h-full" />
             </div>
             Entrustory
           </Link>

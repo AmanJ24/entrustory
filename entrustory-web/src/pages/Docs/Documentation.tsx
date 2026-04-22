@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  ShieldCheck, Search, Rocket, Fingerprint, Terminal, 
+  Search, Rocket, Fingerprint, Terminal, 
   ChevronRight, CheckCircle, ThumbsUp, ThumbsDown, ArrowRight,
   Hash, Link2, ShieldAlert
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { LogoIcon } from '../../components/Logo';
 
 // --- MASSIVE DYNAMIC CONTENT DICTIONARY ---
 const DOC_DATA: Record<string, Record<string, any>> = {
@@ -207,7 +208,7 @@ export const Documentation = () => {
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-3">
               <div className="w-8 h-8 bg-tertiary/10 border border-tertiary/30 rounded flex items-center justify-center text-tertiary">
-                <ShieldCheck size={20} />
+                <LogoIcon className="w-5 h-5" />
               </div>
               <h2 className="text-xl font-bold tracking-tight text-white font-display">Entrustory</h2>
             </Link>

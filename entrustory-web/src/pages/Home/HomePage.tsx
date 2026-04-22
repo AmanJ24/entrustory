@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../utils/supabase';
+import { LogoIcon } from '../../components/Logo';
 
 /* ── tiny scroll-reveal hook ───────────────────────────────── */
 function useReveal(threshold = 0.15) {
@@ -195,7 +196,10 @@ export const HomePage = () => {
       {/* ─── NAV ───────────────────────────────────────────── */}
       <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? 'bg-black/90 backdrop-blur-2xl shadow-2xl shadow-black/40 py-3' : 'bg-transparent py-5'}`}>
         <nav className="flex justify-between items-center max-w-[1440px] mx-auto px-6 md:px-12">
-          <Link to="/" className="text-2xl font-headline font-bold tracking-tighter text-white hover:text-tertiary transition-colors duration-300">
+          <Link to="/" className="flex items-center gap-3 text-2xl font-headline font-bold tracking-tighter text-white hover:text-tertiary transition-colors duration-300">
+            <div className="w-8 h-8 text-tertiary">
+              <LogoIcon className="w-full h-full" />
+            </div>
             Entrustory
           </Link>
 
@@ -562,7 +566,12 @@ export const HomePage = () => {
       <footer className="bg-black w-full py-20 px-6 md:px-12 border-t border-outline-variant/10">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-12 max-w-[1440px] mx-auto">
           <div className="col-span-2">
-            <Link to="/" className="text-xl font-headline font-bold text-white mb-6 block hover:text-tertiary transition-colors">Entrustory</Link>
+            <Link to="/" className="inline-flex items-center gap-3 text-xl font-headline font-bold text-white mb-6 hover:text-tertiary transition-colors">
+              <div className="w-6 h-6 text-tertiary">
+                <LogoIcon className="w-full h-full" />
+              </div>
+              Entrustory
+            </Link>
             <p className="text-[11px] uppercase tracking-[0.05em] text-zinc-500 max-w-[220px] leading-relaxed">
               Programmable, Zero-Knowledge Digital Integrity Infrastructure.
               <br /><br />© {new Date().getFullYear()} Entrustory. All rights reserved.

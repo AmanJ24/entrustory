@@ -14,6 +14,7 @@ import { supabase } from '../../utils/supabase';
 import { verifyServerSignature } from '../../utils/serverSignature';
 import { formatBytes } from '../../utils/format';
 import { ShieldCheck, ShieldAlert, Upload, Hash, Loader2, Download, CheckCircle, XCircle } from 'lucide-react';
+import { LogoIcon } from '../../components/Logo';
 import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 
@@ -189,7 +190,7 @@ export const PublicVerify = () => {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <div className="w-8 h-8 bg-tertiary/10 border border-tertiary/30 rounded flex items-center justify-center text-tertiary">
-              <ShieldCheck size={20} />
+              <LogoIcon className="w-5 h-5" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-white">Entrustory</h1>
           </Link>

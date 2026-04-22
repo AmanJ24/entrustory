@@ -10,6 +10,7 @@ import {
   ShieldCheck, Activity, Database, CheckCircle,
   Server, Wifi, BarChart3
 } from 'lucide-react';
+import { LogoIcon } from '../../components/Logo';
 
 interface HealthMetric {
   name: string;
@@ -133,7 +134,7 @@ export const StatusPage = () => {
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <div className="w-8 h-8 bg-tertiary/10 border border-tertiary/30 rounded flex items-center justify-center text-tertiary">
-              <ShieldCheck size={20} />
+              <LogoIcon className="w-5 h-5" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-white">Entrustory</h1>
             <span className="text-xs text-on-surface-variant font-medium">Status</span>
