@@ -12,8 +12,11 @@ import type { DashboardWorkItem, AuditLog } from '../../types';
 
 
 
+import { useAuth } from '../../hooks/useAuth';
+
 export const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   // State Management
   const [workItems, setWorkItems] = useState<DashboardWorkItem[]>([]);
@@ -27,6 +30,7 @@ export const Dashboard = () => {
   const animatedAnchors = useCountUp(pendingAnchors);
 
   const fetchDashboardData = async () => {
+    if (!user) return;
     setLoading(true);
     try {
       // 1. Fetch WorkItems with their latest version tag
@@ -45,7 +49,8 @@ export const Dashboard = () => {
       // 2. Fetch Total Proofs Count
       const { count: totalCount, error: countError } = await supabase
         .from('versions')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('created_by', user.id);
       
       if (!countError) setTotalProofs(totalCount || 0);
 
@@ -53,7 +58,8 @@ export const Dashboard = () => {
       const { count: pendingCount, error: pendingError } = await supabase
         .from('versions')
         .select('*', { count: 'exact', head: true })
-        .is('blockchain_anchor_id', null);
+        .is('blockchain_anchor_id', null)
+        .eq('created_by', user.id);
       
       if (!pendingError) setPendingAnchors(pendingCount || 0);
 
@@ -74,12 +80,14 @@ export const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    if (user) {
+      fetchDashboardData();
+    }
 
     // Listen for the custom event fired by the "New WorkItem" modal to auto-refresh the UI
     window.addEventListener('refresh_dashboard', fetchDashboardData);
     return () => window.removeEventListener('refresh_dashboard', fetchDashboardData);
-  }, []);
+  }, [user]);
 
   return (
     <div className="min-h-full font-['Inter'] bg-surface text-on-surface p-8">

@@ -17,7 +17,13 @@ const PLANS = {
     storageLimitBytes: 50 * 1024 * 1024, // 50 MB
     storageLabel: '50 MB',
     color: 'text-on-surface-variant',
-    bg: 'bg-surface-variant'
+    bg: 'bg-surface-variant',
+    features: [
+      '50 Cryptographic Proofs / month',
+      '50 MB Zero-Knowledge Vault',
+      'Shared Public Ledger',
+      'Basic Community Support'
+    ]
   },
   pro: {
     id: 'pro',
@@ -27,7 +33,13 @@ const PLANS = {
     storageLimitBytes: 100 * 1024 * 1024 * 1024, // 100 GB
     storageLabel: '100 GB',
     color: 'text-tertiary',
-    bg: 'bg-tertiary'
+    bg: 'bg-tertiary',
+    features: [
+      '5,000 Cryptographic Proofs / month',
+      '100 GB Encrypted Vault',
+      'Automated Webhooks & API Access',
+      'Priority Email Support'
+    ]
   },
   enterprise: {
     id: 'enterprise',
@@ -37,7 +49,14 @@ const PLANS = {
     storageLimitBytes: 2 * 1024 * 1024 * 1024 * 1024, // 2 TB
     storageLabel: '2 TB',
     color: 'text-purple-400',
-    bg: 'bg-purple-600'
+    bg: 'bg-purple-600',
+    features: [
+      '100,000+ Cryptographic Proofs / month',
+      '2 TB+ Encrypted Vault Storage',
+      'Dedicated HSM Signatures',
+      'Custom Layer 4 Anchoring',
+      '24/7 Dedicated Support'
+    ]
   }
 };
 
@@ -52,9 +71,8 @@ export const Billing = () => {
   const [vaultBytes, setVaultBytes] = useState(0);
 
   // Active Plan State
-  const [activePlan, setActivePlan] = useState<PlanKey>('starter');
+  const [activePlan] = useState<PlanKey>('starter');
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const fetchUsage = async () => {
@@ -63,15 +81,17 @@ export const Billing = () => {
         // 1. Get total cryptographic proofs generated
         const { count } = await supabase
           .from('versions')
-          .select('*', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true })
+          .eq('created_by', user.id);
         
         setProofCount(count || 0);
 
         // 2. Get total vault storage used
         const { data: files } = await supabase
           .from('evidence_hashes')
-          .select('file_size')
-          .not('storage_path', 'is', null);
+          .select('file_size, versions!inner(created_by)')
+          .not('storage_path', 'is', null)
+          .eq('versions.created_by', user.id);
 
         if (files) {
           const totalBytes = files.reduce((acc, curr) => acc + Number(curr.file_size || 0), 0);
@@ -86,16 +106,6 @@ export const Billing = () => {
 
     fetchUsage();
   }, [user]);
-
-  const handleUpgrade = (planId: PlanKey) => {
-    setIsProcessing(true);
-    // Simulate Stripe Checkout Delay
-    setTimeout(() => {
-      setActivePlan(planId);
-      setIsProcessing(false);
-      setIsUpgradeModalOpen(false);
-    }, 1500);
-  };
 
 
 
@@ -318,15 +328,17 @@ export const Billing = () => {
                 <h3 className="text-xl font-bold text-on-surface mb-2">Starter</h3>
                 <div className="text-3xl font-black text-white mb-6">$0<span className="text-sm font-medium text-on-surface-variant">/mo</span></div>
                 <ul className="space-y-4 mb-8 flex-1">
-                  <li className="flex gap-3 text-sm text-on-surface"><CheckCircle size={18} className="text-on-surface-variant" /> 50 Cryptographic Proofs</li>
-                  <li className="flex gap-3 text-sm text-on-surface"><CheckCircle size={18} className="text-on-surface-variant" /> 50 MB Vault Storage</li>
-                  <li className="flex gap-3 text-sm text-on-surface"><CheckCircle size={18} className="text-on-surface-variant" /> Shared Public Ledger</li>
+                  {PLANS.starter.features.map((feature, idx) => (
+                    <li key={idx} className="flex gap-3 text-sm text-on-surface">
+                      <CheckCircle size={18} className="text-on-surface-variant shrink-0" /> {feature}
+                    </li>
+                  ))}
                 </ul>
                 <button 
-                  onClick={() => handleUpgrade('starter')} disabled={activePlan === 'starter' || isProcessing}
-                  className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50 bg-surface-variant text-white hover:bg-slate-700 border border-outline"
+                  disabled={true}
+                  className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-surface-variant text-white border border-outline"
                 >
-                  {isProcessing ? 'Processing...' : activePlan === 'starter' ? 'Current Plan' : 'Downgrade to Starter'}
+                  {activePlan === 'starter' ? 'Current Plan' : 'Billing Coming Soon'}
                 </button>
               </div>
 
@@ -336,15 +348,17 @@ export const Billing = () => {
                 <h3 className="text-xl font-bold text-tertiary mb-2 mt-2">Professional</h3>
                 <div className="text-3xl font-black text-white mb-6">$49<span className="text-sm font-medium text-on-surface-variant">/mo</span></div>
                 <ul className="space-y-4 mb-8 flex-1">
-                  <li className="flex gap-3 text-sm text-on-surface"><CheckCircle size={18} className="text-tertiary" /> 5,000 Cryptographic Proofs</li>
-                  <li className="flex gap-3 text-sm text-on-surface"><CheckCircle size={18} className="text-tertiary" /> 100 GB Encrypted Vault</li>
-                  <li className="flex gap-3 text-sm text-on-surface"><CheckCircle size={18} className="text-tertiary" /> Automated Webhooks</li>
+                  {PLANS.pro.features.map((feature, idx) => (
+                    <li key={idx} className="flex gap-3 text-sm text-on-surface">
+                      <CheckCircle size={18} className="text-tertiary shrink-0" /> {feature}
+                    </li>
+                  ))}
                 </ul>
                 <button 
-                  onClick={() => handleUpgrade('pro')} disabled={activePlan === 'pro' || isProcessing}
-                  className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50 bg-tertiary text-white hover:bg-tertiary shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+                  disabled={true}
+                  className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-tertiary text-[#0e0e0e] shadow-[0_0_15px_rgba(6,182,212,0.3)]"
                 >
-                  {isProcessing ? <Loader2 className="animate-spin mx-auto" /> : activePlan === 'pro' ? 'Current Plan' : 'Upgrade to Pro'}
+                  {activePlan === 'pro' ? 'Current Plan' : 'Billing Coming Soon'}
                 </button>
               </div>
 
@@ -353,16 +367,17 @@ export const Billing = () => {
                 <h3 className="text-xl font-bold text-purple-400 mb-2">Enterprise</h3>
                 <div className="text-3xl font-black text-white mb-6">$1,250<span className="text-sm font-medium text-on-surface-variant">/mo</span></div>
                 <ul className="space-y-4 mb-8 flex-1">
-                  <li className="flex gap-3 text-sm text-on-surface"><CheckCircle size={18} className="text-purple-500" /> 100,000+ Cryptographic Proofs</li>
-                  <li className="flex gap-3 text-sm text-on-surface"><CheckCircle size={18} className="text-purple-500" /> 2 TB+ Encrypted Vault</li>
-                  <li className="flex gap-3 text-sm text-on-surface"><CheckCircle size={18} className="text-purple-500" /> Dedicated HSM Signatures</li>
-                  <li className="flex gap-3 text-sm text-on-surface"><CheckCircle size={18} className="text-purple-500" /> Custom Layer 4 Anchoring</li>
+                  {PLANS.enterprise.features.map((feature, idx) => (
+                    <li key={idx} className="flex gap-3 text-sm text-on-surface">
+                      <CheckCircle size={18} className="text-purple-500 shrink-0" /> {feature}
+                    </li>
+                  ))}
                 </ul>
                 <button 
-                  onClick={() => handleUpgrade('enterprise')} disabled={activePlan === 'enterprise' || isProcessing}
-                  className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50 bg-surface-variant text-white hover:bg-slate-700 border border-outline"
+                  disabled={true}
+                  className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-surface-variant text-white border border-outline"
                 >
-                  {isProcessing ? 'Processing...' : activePlan === 'enterprise' ? 'Current Plan' : 'Contact Sales'}
+                  {activePlan === 'enterprise' ? 'Current Plan' : 'Billing Coming Soon'}
                 </button>
               </div>
 
