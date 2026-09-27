@@ -5,14 +5,25 @@
 //
 // Required env vars (set via Supabase Dashboard → Edge Functions → Secrets):
 //   ED25519_PRIVATE_KEY  — 64-char hex private key
+//   ALLOWED_ORIGIN       — the deployed frontend's origin (e.g. https://entrustory.vercel.app),
+//                          used for CORS. Falls back to '*' only if unset.
+// SUPABASE_URL / SUPABASE_ANON_KEY are auto-injected by the Supabase runtime into every
+// edge function — no need to set those manually.
 //
 // The private key NEVER leaves this function. Only the signature is returned.
+//
+// This function requires a valid Supabase auth JWT — without that, anyone who finds
+// the function URL could call it directly and burn edge-function invocation quota
+// for free, unrelated to actual app usage.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 import { ed25519 } from 'https://esm.sh/@noble/curves@1.3.0/ed25519';
 
+const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') ?? '*';
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': allowedOrigin,
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
@@ -24,6 +35,35 @@ serve(async (req: Request) => {
   }
 
   try {
+    // Require a valid Supabase auth session — this is a signing oracle, not a
+    // public utility, so anonymous callers must be rejected before any work is done.
+    const authHeader = req.headers.get('Authorization');
+    const jwt = authHeader?.replace(/^Bearer\s+/i, '');
+    if (!jwt) {
+      return new Response(
+        JSON.stringify({ error: 'Missing Authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(
+        JSON.stringify({ error: 'Server auth is not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const authClient = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: userData, error: userError } = await authClient.auth.getUser(jwt);
+    if (userError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired session' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const privateKeyHex = Deno.env.get('ED25519_PRIVATE_KEY');
     if (!privateKeyHex) {
       return new Response(

@@ -13,6 +13,8 @@
  */
 
 import { ed25519 } from '@noble/curves/ed25519.js';
+import { supabase } from './supabase';
+import { isDemoMode } from './demoMode';
 
 // ─── Key Management ───────────────────────────────────────────
 
@@ -70,28 +72,35 @@ export const generateServerSignature = async (
   timestamp: string
 ): Promise<string> => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-  // Try server-side signing first (production path)
-  if (supabaseUrl && supabaseKey) {
+  // Demo Mode visitors have no real session and no real data to sign — skip
+  // the network call entirely rather than hitting the real edge function
+  // (and burning its invocation quota) just to get an expected 401 back.
+  if (supabaseUrl && !isDemoMode()) {
     try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/sign-merkle-root`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({ merkle_root: merkleRoot, timestamp }),
-      });
+      // The edge function requires a real user JWT (see supabase/functions/
+      // sign-merkle-root) — the anon key alone is rejected, so we need the
+      // current session's access token, not VITE_SUPABASE_ANON_KEY.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        const response = await fetch(`${supabaseUrl}/functions/v1/sign-merkle-root`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ merkle_root: merkleRoot, timestamp }),
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.signature) {
-          return `ed25519:${data.signature}`;
+        if (response.ok) {
+          const data = await response.json();
+          if (data.signature) {
+            return `ed25519:${data.signature}`;
+          }
         }
       }
     } catch {
-      // Edge Function not deployed — fall through to local signing
+      // Edge Function not deployed or unreachable — fall through to local signing
     }
   }
 

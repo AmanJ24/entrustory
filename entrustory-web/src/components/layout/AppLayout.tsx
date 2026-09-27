@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabase';
+import { isDemoMode } from '../../utils/demoMode';
 import { timeAgo } from '../../utils/format';
 import { NewWorkItemModal } from '../NewWorkItemModal';
 import type { AuditLog, WorkspaceData } from '../../types';
@@ -101,7 +102,14 @@ export const AppLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-surface text-on-surface font-sans">
-      
+
+      {isDemoMode() && (
+        <div className="shrink-0 bg-tertiary/10 border-b border-tertiary/30 text-tertiary text-xs font-medium text-center py-1.5 px-4">
+          You're viewing a live demo with sample data — nothing you do here is saved.{' '}
+          <Link to="/" className="underline hover:text-white">Exit demo</Link>
+        </div>
+      )}
+
       {/* --- TIER 1: Global Top Header --- */}
       <header className="h-14 bg-surface border-b border-surface-variant flex items-center justify-between px-6 shrink-0 z-30">
         <div className="flex items-center gap-6">

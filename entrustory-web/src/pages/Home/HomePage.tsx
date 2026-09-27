@@ -214,8 +214,8 @@ export const HomePage = () => {
 
           <div className="hidden md:flex items-center gap-4">
             <Link to="/login" className="nav-link">Sign In</Link>
-            <Link to="/login" className="bg-white text-black font-headline font-bold text-sm px-6 py-2.5 rounded hover:bg-tertiary hover:text-black transition-all duration-300 active:scale-95">
-              Get Started
+            <Link to="/app/dashboard" className="bg-white text-black font-headline font-bold text-sm px-6 py-2.5 rounded hover:bg-tertiary hover:text-black transition-all duration-300 active:scale-95">
+              Live Demo
             </Link>
           </div>
 
@@ -235,7 +235,7 @@ export const HomePage = () => {
             <Link to="/status" className="block text-sm text-zinc-300 hover:text-white">Status</Link>
             <div className="pt-4 border-t border-outline-variant/20 flex flex-col gap-3">
               <Link to="/login" className="text-sm text-zinc-300 hover:text-white">Sign In</Link>
-              <Link to="/login" className="bg-white text-black font-bold text-sm px-6 py-2.5 rounded text-center">Get Started</Link>
+              <Link to="/app/dashboard" className="bg-white text-black font-bold text-sm px-6 py-2.5 rounded text-center">Live Demo</Link>
             </div>
           </div>
         )}
@@ -277,8 +277,8 @@ export const HomePage = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up animation-delay-500">
-              <Link to="/login" className="group bg-white text-black font-headline font-bold px-10 py-4 rounded hover:shadow-[0_0_40px_rgba(255,177,72,0.3)] transition-all duration-500 active:scale-95 flex items-center gap-3 justify-center">
-                Start Building
+              <Link to="/app/dashboard" className="group bg-white text-black font-headline font-bold px-10 py-4 rounded hover:shadow-[0_0_40px_rgba(255,177,72,0.3)] transition-all duration-500 active:scale-95 flex items-center gap-3 justify-center">
+                Try Live Demo
                 <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
               </Link>
               <a href="#architecture" className="border border-outline-variant/40 text-zinc-300 font-headline font-bold px-10 py-4 rounded hover:bg-white/5 hover:border-outline-variant transition-all duration-500 flex items-center gap-3 justify-center">
@@ -550,8 +550,8 @@ export const HomePage = () => {
               Join the network securing their digital future with cryptographic permanence. Engineered for enterprises that demand integrity.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/login" className="group bg-white text-black font-headline font-bold px-12 py-5 rounded hover:shadow-[0_0_60px_rgba(255,177,72,0.25)] transition-all duration-500 active:scale-95 flex items-center gap-3 justify-center">
-                Request Access
+              <Link to="/app/dashboard" className="group bg-white text-black font-headline font-bold px-12 py-5 rounded hover:shadow-[0_0_60px_rgba(255,177,72,0.25)] transition-all duration-500 active:scale-95 flex items-center gap-3 justify-center">
+                Try Live Demo
                 <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
               </Link>
               <Link to="/docs" className="border border-outline-variant/40 text-zinc-300 font-headline font-bold px-12 py-5 rounded hover:bg-white/5 hover:border-outline-variant transition-all duration-500 flex items-center gap-3 justify-center">

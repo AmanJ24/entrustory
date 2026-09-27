@@ -1,0 +1,38 @@
+# Entrustory — Supabase Keep-Alive
+#
+# Free-tier Supabase projects pause automatically after 7 days with no API
+# activity. This pings a public, read-only endpoint every 3 days to keep the
+# project active — well under the pause window, with margin for a missed run.
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL       — e.g. https://xxxx.supabase.co
+#   SUPABASE_ANON_KEY  — the public anon key (safe to use here; it's already
+#                         public in the deployed frontend bundle)
+#
+# Deliberately a read (SELECT), not a write — this workflow's schedule is
+# public in the repo, so it must not become a target for anything that
+# could cost storage/DB quota if triggered repeatedly.
+
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    - cron: '0 6 */3 * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    name: Ping Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read-only ping to keep project active
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/blockchain_anchors?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+          echo "Supabase responded with HTTP $status"
+          if [ "$status" -ge 400 ]; then
+            echo "::error::Keep-alive ping failed with status $status"
+            exit 1
+          fi
