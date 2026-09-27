@@ -1,38 +1,61 @@
-# Entrustory — Supabase Keep-Alive
+# Entrustory — Supabase Keep-Alive + Uptime Tracking
 #
 # Free-tier Supabase projects pause automatically after 7 days with no API
-# activity. This pings a public, read-only endpoint every 3 days to keep the
-# project active — well under the pause window, with margin for a missed run.
+# activity. This pings the project every 30 minutes to keep it active, and
+# logs each check to the `uptime_checks` table so /status and the homepage
+# can show real uptime/latency history instead of placeholder numbers.
 #
 # Required repo secrets (Settings → Secrets and variables → Actions):
-#   SUPABASE_URL       — e.g. https://xxxx.supabase.co
-#   SUPABASE_ANON_KEY  — the public anon key (safe to use here; it's already
-#                         public in the deployed frontend bundle)
+#   SUPABASE_URL               — e.g. https://xxxx.supabase.co
+#   SUPABASE_ANON_KEY          — the public anon key, used for the read check
+#   SUPABASE_SERVICE_ROLE_KEY  — bypasses RLS; the ONLY way rows get written
+#                                 to uptime_checks (no anon/authenticated
+#                                 insert policy exists — see supabase_schema.sql
+#                                 section 8). Never expose this key to the
+#                                 frontend or log its value.
 #
-# Deliberately a read (SELECT), not a write — this workflow's schedule is
-# public in the repo, so it must not become a target for anything that
-# could cost storage/DB quota if triggered repeatedly.
+# Runs every 30 minutes — free on a public repo (GitHub Actions minutes are
+# unlimited for public repositories).
 
 name: Supabase Keep-Alive
 
 on:
   schedule:
-    - cron: '0 6 */3 * *'
+    - cron: '*/30 * * * *'
   workflow_dispatch: {}
 
 jobs:
-  ping:
-    name: Ping Supabase
+  check:
+    name: Health Check + Log Uptime
     runs-on: ubuntu-latest
     steps:
-      - name: Read-only ping to keep project active
+      - name: Ping Supabase and record the result
         run: |
-          status=$(curl -s -o /dev/null -w "%{http_code}" \
+          result=$(curl -s -o /dev/null -w "%{http_code} %{time_total}" \
             "${{ secrets.SUPABASE_URL }}/rest/v1/blockchain_anchors?select=id&limit=1" \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
-          echo "Supabase responded with HTTP $status"
-          if [ "$status" -ge 400 ]; then
-            echo "::error::Keep-alive ping failed with status $status"
+          http_code=$(echo "$result" | awk '{print $1}')
+          time_total=$(echo "$result" | awk '{print $2}')
+          latency_ms=$(awk -v t="$time_total" 'BEGIN { printf "%d", t * 1000 }')
+
+          echo "Supabase responded with HTTP $http_code in ${latency_ms}ms"
+
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            if [ "$latency_ms" -lt 800 ]; then status="operational"; else status="degraded"; fi
+          else
+            status="down"
+          fi
+
+          write_code=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/uptime_checks" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d "{\"status\": \"$status\", \"latency_ms\": $latency_ms}")
+
+          if [ "$write_code" -ge 300 ]; then
+            echo "::error::Failed to log uptime check (HTTP $write_code)"
             exit 1
           fi

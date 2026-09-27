@@ -272,7 +272,26 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('vault', 'vault', false);
 CREATE POLICY "Authenticated users can upload to vault" 
 ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'vault' AND auth.role() = 'authenticated');
 
-CREATE POLICY "Authenticated users can download from vault" 
+CREATE POLICY "Authenticated users can download from vault"
 ON storage.objects FOR SELECT USING (bucket_id = 'vault' AND auth.role() = 'authenticated');
+
+
+-- ==========================================
+-- 8. UPTIME TRACKING (public /status page + homepage stats)
+-- ==========================================
+-- Logged by a scheduled GitHub Action (.github/workflows/keepalive.yml), which
+-- holds the service_role key and is the only writer — service_role bypasses RLS,
+-- so no INSERT/UPDATE/DELETE policy is defined here. Anyone can read the history
+-- (it's just health-check timing, nothing sensitive).
+CREATE TABLE uptime_checks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    status TEXT NOT NULL CHECK (status IN ('operational', 'degraded', 'down')),
+    latency_ms INTEGER NOT NULL
+);
+
+ALTER TABLE uptime_checks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view uptime history" ON uptime_checks FOR SELECT USING (true);
 
 -- ================== END OF SCRIPT ==================

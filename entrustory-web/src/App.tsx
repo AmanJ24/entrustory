@@ -16,6 +16,7 @@ import { ProtectedRoute, PublicRoute } from './components/layout/AuthGuards';
 import { ExportCenter } from './pages/Export/ExportCenter';
 import { PublicVerify } from './pages/Verification/PublicVerify';
 import { StatusPage } from './pages/Status/StatusPage';
+import { LegalPage } from './pages/Legal/LegalPage';
 import { CommandPalette } from './components/CommandPalette';
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
         <Route path="/verify" element={<PublicVerify />} />
         <Route path="/verify/:hash" element={<PublicVerify />} />
         <Route path="/status" element={<StatusPage />} />
+        <Route path="/legal/:section" element={<LegalPage />} />
 
         {/* PROTECTED APP ROUTES */}
         <Route path="/app" element={<ProtectedRoute />}>

@@ -212,40 +212,42 @@ export const ApiConfig = () => {
                   </button>
                   {language === 'curl' && (
                     <div className="text-on-surface">
-                      <span className="text-pink-400">curl</span> -X POST https://api.entrustory.com/v1/anchor \<br/>
-                      &nbsp;&nbsp;-H <span className="text-green-400">"Authorization: Bearer {displayKey}"</span> \<br/>
+                      <span className="text-on-surface-variant">// Calls the anchor_via_api Postgres function directly via PostgREST</span><br/>
+                      <span className="text-pink-400">curl</span> -X POST {import.meta.env.VITE_SUPABASE_URL}/rest/v1/rpc/anchor_via_api \<br/>
+                      &nbsp;&nbsp;-H <span className="text-green-400">"apikey: YOUR_SUPABASE_ANON_KEY"</span> \<br/>
                       &nbsp;&nbsp;-H <span className="text-green-400">"Content-Type: application/json"</span> \<br/>
-                      &nbsp;&nbsp;-d <span className="text-yellow-300">'{'{'}<br/>&nbsp;&nbsp;&nbsp;&nbsp;"workspace_id": "{workspaceId.split('-')[0]}...",<br/>&nbsp;&nbsp;&nbsp;&nbsp;"sha256_hash": "e3b0c44298fc1c149afbf4..."<br/>&nbsp;&nbsp;{'}'}'</span>
+                      &nbsp;&nbsp;-d <span className="text-yellow-300">'{'{'}<br/>&nbsp;&nbsp;&nbsp;&nbsp;"p_api_key": "{displayKey}",<br/>&nbsp;&nbsp;&nbsp;&nbsp;"p_file_name": "contract.pdf",<br/>&nbsp;&nbsp;&nbsp;&nbsp;"p_file_size": 219234,<br/>&nbsp;&nbsp;&nbsp;&nbsp;"p_sha256_hash": "e3b0c44298fc1c149afbf4..."<br/>&nbsp;&nbsp;{'}'}'</span>
                     </div>
                   )}
                   {language === 'nodejs' && (
                     <div className="text-on-surface">
-                      <span className="text-pink-400">import</span> {'{ Entrustory }'} <span className="text-pink-400">from</span> <span className="text-green-400">'@entrustory/sdk'</span>;<br /><br />
-                      <span className="text-on-surface-variant">// Initialize client</span><br />
-                      <span className="text-pink-400">const</span> client = <span className="text-pink-400">new</span> <span className="text-yellow-300">Entrustory</span>({'{'}<br />
-                      &nbsp;&nbsp;apiKey: <span className="text-green-400">"{displayKey}"</span><br />
+                      <span className="text-on-surface-variant">// Same call the entrustory-cli tool makes — see entrustory-cli/cli.js</span><br/>
+                      <span className="text-pink-400">import</span> {'{ createClient }'} <span className="text-pink-400">from</span> <span className="text-green-400">'@supabase/supabase-js'</span>;<br /><br />
+                      <span className="text-pink-400">const</span> supabase = <span className="text-yellow-300">createClient</span>(SUPABASE_URL, SUPABASE_ANON_KEY);<br /><br />
+                      <span className="text-pink-400">const</span> {'{ data, error }'} = <span className="text-pink-400">await</span> supabase.<span className="text-blue-400">rpc</span>(<span className="text-green-400">'anchor_via_api'</span>, {'{'}<br />
+                      &nbsp;&nbsp;p_api_key: <span className="text-green-400">"{displayKey}"</span>,<br />
+                      &nbsp;&nbsp;p_file_name: <span className="text-green-400">"contract.pdf"</span>,<br />
+                      &nbsp;&nbsp;p_file_size: 219234,<br />
+                      &nbsp;&nbsp;p_sha256_hash: <span className="text-green-400">"e3b0c44298fc1c149afbf4..."</span><br />
                       {'}'});<br /><br />
-                      <span className="text-on-surface-variant">// Anchor evidence to ledger</span><br />
-                      <span className="text-pink-400">const</span> proof = <span className="text-pink-400">await</span> client.proofs.<span className="text-blue-400">create</span>({'{'}<br />
-                      &nbsp;&nbsp;workspaceId: <span className="text-green-400">"{workspaceId.split('-')[0]}..."</span>,<br />
-                      &nbsp;&nbsp;hash: <span className="text-green-400">"sha256:e3b0c..."</span><br />
-                      {'}'});<br /><br />
-                      console.<span className="text-blue-400">log</span>(proof.status);
+                      console.<span className="text-blue-400">log</span>(data.status);
                     </div>
                   )}
                   {language === 'python' && (
                     <div className="text-on-surface">
-                      <span className="text-pink-400">import</span> entrustory<br /><br />
-                      <span className="text-on-surface-variant"># Initialize the client</span><br />
-                      client = entrustory.<span className="text-yellow-300">Client</span>(<br />
-                      &nbsp;&nbsp;api_key=<span className="text-green-400">"{displayKey}"</span><br />
+                      <span className="text-on-surface-variant"># No official Python client yet — this is a plain HTTP call to the same RPC</span><br/>
+                      <span className="text-pink-400">import</span> requests<br /><br />
+                      resp = requests.<span className="text-blue-400">post</span>(<br />
+                      &nbsp;&nbsp;<span className="text-green-400">"{import.meta.env.VITE_SUPABASE_URL}/rest/v1/rpc/anchor_via_api"</span>,<br />
+                      &nbsp;&nbsp;headers={'{"apikey"'}: <span className="text-green-400">"YOUR_SUPABASE_ANON_KEY"</span>{'}'},<br />
+                      &nbsp;&nbsp;json={'{'}<br />
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-green-400">"p_api_key"</span>: <span className="text-green-400">"{displayKey}"</span>,<br />
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-green-400">"p_file_name"</span>: <span className="text-green-400">"contract.pdf"</span>,<br />
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-green-400">"p_file_size"</span>: 219234,<br />
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-green-400">"p_sha256_hash"</span>: <span className="text-green-400">"e3b0c44298fc1c149afbf4..."</span><br />
+                      &nbsp;&nbsp;{'}'},<br />
                       )<br /><br />
-                      <span className="text-on-surface-variant"># Anchor evidence to ledger</span><br />
-                      proof = client.proofs.<span className="text-blue-400">create</span>(<br />
-                      &nbsp;&nbsp;workspace_id=<span className="text-green-400">"{workspaceId.split('-')[0]}..."</span>,<br />
-                      &nbsp;&nbsp;hash=<span className="text-green-400">"sha256:e3b0c..."</span><br />
-                      )<br /><br />
-                      <span className="text-blue-400">print</span>(proof.status)
+                      <span className="text-blue-400">print</span>(resp.json())
                     </div>
                   )}
                 </div>

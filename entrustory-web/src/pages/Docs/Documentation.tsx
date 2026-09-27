@@ -34,14 +34,13 @@ const DOC_DATA: Record<string, Record<string, any>> = {
       quickstart: (
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-white">Installation</h2>
-          <p className="text-on-surface">Install the official Node.js SDK via npm or yarn:</p>
-          <div className="bg-[#0c1017] border border-surface-variant rounded-xl p-4 font-mono text-sm text-tertiary">npm install @entrustory/sdk</div>
+          <p className="text-on-surface">Clone the CLI from the repo — there's no published npm package yet, so this is a local tool for now:</p>
+          <div className="bg-[#0c1017] border border-surface-variant rounded-xl p-4 font-mono text-sm text-tertiary">git clone https://github.com/AmanJ24/entrustory && cd entrustory/entrustory-cli && npm install</div>
           <h2 className="text-2xl font-bold text-white mt-8">Your First Request</h2>
-          <p className="text-on-surface">Use your API key from the Dashboard to anchor an asset:</p>
+          <p className="text-on-surface">Use your API key from the Dashboard to anchor a file from the terminal:</p>
           <div className="bg-[#0c1017] border border-surface-variant rounded-xl p-6 font-mono text-sm leading-relaxed text-on-surface">
-            <span className="text-pink-400">import</span> {'{ Entrustory }'} <span className="text-pink-400">from</span> <span className="text-green-400">'@entrustory/sdk'</span>;<br/><br/>
-            <span className="text-pink-400">const</span> client = <span className="text-pink-400">new</span> <span className="text-yellow-300">Entrustory</span>({'{'} apiKey: <span className="text-green-400">'pk_live_...'</span> {'}'});<br/>
-            <span className="text-pink-400">await</span> client.proofs.<span className="text-blue-400">create</span>({'{'} hash: <span className="text-green-400">'e3b0c442...'</span> {'}'});
+            <span className="text-on-surface-variant"># .env: SUPABASE_URL, SUPABASE_ANON_KEY, ENTRUSTORY_API_KEY</span><br/>
+            node cli.js ./contract.pdf
           </div>
         </div>
       )

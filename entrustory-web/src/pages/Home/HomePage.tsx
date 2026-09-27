@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../utils/supabase';
+import { fetchUptimeSummary } from '../../utils/uptimeStats';
 import { LogoIcon } from '../../components/Logo';
 
 /* ── tiny scroll-reveal hook ───────────────────────────────── */
@@ -137,18 +138,37 @@ function useLiveStats() {
 }
 
 /* ── live hash ticker ──────────────────────────────────────── */
+function shuffle(arr: string[]) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
 function HashTicker({ seedHashes }: { seedHashes: string[] }) {
   const [hashes, setHashes] = useState<string[]>([]);
   const poolRef = useRef<string[]>([]);
+  const queueRef = useRef<string[]>([]);
+
   useEffect(() => {
     poolRef.current = seedHashes;
+    queueRef.current = shuffle(seedHashes);
   }, [seedHashes]);
 
   useEffect(() => {
+    // Draws from a shuffled queue of real hashes instead of Math.random()
+    // sampling with replacement, so the same hash doesn't visibly repeat
+    // until the whole pool has cycled through once.
     function next() {
-      const pool = poolRef.current;
-      if (pool.length > 0) return pool[Math.floor(Math.random() * pool.length)];
-      return Array.from({ length: 64 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+      if (queueRef.current.length === 0) {
+        queueRef.current = poolRef.current.length > 0 ? shuffle(poolRef.current) : [];
+      }
+      return (
+        queueRef.current.pop() ??
+        Array.from({ length: 64 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('')
+      );
     }
     setHashes([next(), next(), next()]);
     const id = setInterval(() => {
@@ -175,6 +195,15 @@ export const HomePage = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const { hashCount, recentHashes } = useLiveStats();
+  const [uptimePct, setUptimePct] = useState<number | null>(null);
+  const [latencyMs, setLatencyMs] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchUptimeSummary().then((s) => {
+      setUptimePct(s.uptimePct);
+      setLatencyMs(s.latestLatencyMs);
+    });
+  }, []);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 40);
@@ -305,9 +334,13 @@ export const HomePage = () => {
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-headline font-bold text-white mb-2">
-                <Counter end={99} suffix=".99%" duration={1500} />
+                {uptimePct === null ? (
+                  <span className="text-2xl md:text-3xl text-on-surface-variant">Tracking started</span>
+                ) : (
+                  <Counter end={Math.floor(uptimePct)} suffix={`.${(uptimePct % 1).toFixed(2).slice(2)}%`} duration={1500} />
+                )}
               </div>
-              <div className="text-xs uppercase tracking-[0.15em] text-outline font-label">Uptime SLA</div>
+              <div className="text-xs uppercase tracking-[0.15em] text-outline font-label">Uptime</div>
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-headline font-bold text-tertiary mb-2">
@@ -317,11 +350,18 @@ export const HomePage = () => {
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-headline font-bold text-white mb-2">
-                {'<'}<Counter end={50} suffix="ms" duration={1000} />
+                {latencyMs === null ? (
+                  <span className="text-2xl md:text-3xl text-on-surface-variant">Tracking started</span>
+                ) : (
+                  <Counter end={latencyMs} suffix="ms" duration={1000} />
+                )}
               </div>
-              <div className="text-xs uppercase tracking-[0.15em] text-outline font-label">Proof Latency</div>
+              <div className="text-xs uppercase tracking-[0.15em] text-outline font-label">Backend Latency</div>
             </div>
           </div>
+          <p className="text-center text-[11px] text-on-surface-variant/60 mt-6">
+            Uptime and latency are logged automatically every 30 minutes, starting the day this tracker shipped — no history is backfilled.
+          </p>
         </section>
 
         {/* ─── PLATFORM FEATURES ──────────────────────────── */}
@@ -338,7 +378,7 @@ export const HomePage = () => {
                 { icon: 'fingerprint', label: 'LAYER 01', title: 'Client Hashing', desc: 'SHA-256 computed entirely in-browser. Your raw data never leaves your device.', color: 'text-white' },
                 { icon: 'account_tree', label: 'LAYER 02', title: 'Merkle Trees', desc: 'Deterministic, lexicographically sorted trees with O(log n) inclusion proofs.', color: 'text-primary' },
                 { icon: 'verified_user', label: 'LAYER 03', title: 'Ed25519 Signing', desc: 'The Merkle Root is signed via asymmetric cryptography with precise UTC timestamps.', color: 'text-tertiary' },
-                { icon: 'link', label: 'LAYER 04', title: 'Blockchain Anchor', desc: 'Super Roots are committed to a public chain for permanent, decentralized trust.', color: 'text-white' },
+                { icon: 'link', label: 'LAYER 04', title: 'Blockchain Anchor', desc: 'Super Roots are queued for anchoring to a public chain, extending the signed ledger with decentralized verification. Rolling out.', color: 'text-white' },
               ].map((item, i) => (
                 <div key={i} className="group bg-surface-container-low hover:bg-surface-container-high p-10 transition-all duration-500 border border-transparent hover:border-outline-variant/20 relative overflow-hidden cursor-default"
                      style={{ transitionDelay: `${i * 100}ms` }}>
@@ -447,7 +487,7 @@ export const HomePage = () => {
               </h2>
               <div className="space-y-8">
                 {[
-                  { icon: 'terminal', title: 'CLI & SDK', desc: 'Anchor any file from terminal or integrate via our Node.js SDK.' },
+                  { icon: 'terminal', title: 'CLI', desc: 'Anchor any file from the terminal with the open-source entrustory-cli.' },
                   { icon: 'webhook', title: 'Real-time Webhooks', desc: 'Get notified instantly when a proof is anchored to the ledger.' },
                   { icon: 'key', title: 'API Key Scopes', desc: 'Fine-grained permissions for workspace-level access control.' },
                   { icon: 'deployed_code', title: 'GitHub Action', desc: 'Automatically anchor every build artifact in your CI/CD pipeline.' },
@@ -475,23 +515,21 @@ export const HomePage = () => {
                     <div className="w-3 h-3 rounded-full bg-yellow-500/20" />
                     <div className="w-3 h-3 rounded-full bg-green-500/20" />
                   </div>
-                  <span className="text-[10px] font-mono text-outline-variant">anchor.js</span>
+                  <span className="text-[10px] font-mono text-outline-variant">terminal</span>
                 </div>
                 <pre className="p-6 font-mono text-sm leading-7 overflow-x-auto">
-<code><span className="text-tertiary">import</span> {'{ Entrust }'} <span className="text-tertiary">from</span> <span className="text-green-400">'entrustory'</span>;{'\n'}
+<code><span className="text-outline-variant">$</span> node cli.js ./contract.pdf{'\n'}
 {'\n'}
-<span className="text-outline-variant">// Initialize with scoped key</span>{'\n'}
-<span className="text-tertiary">const</span> client = <span className="text-tertiary">new</span> Entrust(process.env.KEY);{'\n'}
+🔐 Entrustory CLI — File Anchoring{'\n'}
+────────────────────────────────{'\n'}
+   File : contract.pdf{'\n'}
+   Size : 214.02 KB{'\n'}
+   Hash : 7f83b1657ff1fc53b92dc18148a1d65d...{'\n'}
+────────────────────────────────{'\n'}
 {'\n'}
-<span className="text-tertiary">async function</span> <span className="text-white">protect</span>() {'{'}{'\n'}
-  <span className="text-tertiary">const</span> proof = <span className="text-tertiary">await</span> client.anchor({'{'}{'\n'}
-    assetId: <span className="text-green-400">'doc_0842'</span>,{'\n'}
-    hash:    <span className="text-green-400">'sha256:7f83b...'</span>{'\n'}
-  {'}'});{'\n'}
+⏳ Submitting to Entrustory Ledger...{'\n'}
 {'\n'}
-  console.log(proof.root);{'\n'}
-  <span className="text-outline-variant">// → "0xae4f...c912"</span>{'\n'}
-{'}'}</code>
+<span className="text-tertiary">✅ Successfully anchored to ledger!</span></code>
                 </pre>
               </div>
             </div>
@@ -547,7 +585,7 @@ export const HomePage = () => {
               Future-proof your<br />digital legacy.
             </h2>
             <p className="text-on-surface-variant text-lg mb-12 leading-relaxed max-w-xl mx-auto">
-              Join the network securing their digital future with cryptographic permanence. Engineered for enterprises that demand integrity.
+              A programmable integrity layer for developers and teams who need provable, tamper-evident records — not just a promise.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/app/dashboard" className="group bg-white text-black font-headline font-bold px-12 py-5 rounded hover:shadow-[0_0_60px_rgba(255,177,72,0.25)] transition-all duration-500 active:scale-95 flex items-center gap-3 justify-center">
@@ -586,21 +624,20 @@ export const HomePage = () => {
           </div>
           <div className="flex flex-col gap-3">
             <span className="text-[11px] uppercase tracking-[0.1em] text-white font-bold mb-2 font-label">Developers</span>
-            <a href="#developers" className="footer-link">SDK</a>
+            <a href="https://github.com/AmanJ24/entrustory/tree/master/entrustory-cli" target="_blank" rel="noopener noreferrer" className="footer-link">CLI</a>
             <Link to="/docs" className="footer-link">Documentation</Link>
             <a href="https://github.com/AmanJ24/entrustory" target="_blank" rel="noopener noreferrer" className="footer-link">GitHub</a>
           </div>
           <div className="flex flex-col gap-3">
             <span className="text-[11px] uppercase tracking-[0.1em] text-white font-bold mb-2 font-label">Legal</span>
-            <a href="#" className="footer-link">Privacy Policy</a>
-            <a href="#" className="footer-link">Terms of Service</a>
-            <a href="#" className="footer-link">Security</a>
+            <Link to="/legal/privacy" className="footer-link">Privacy Policy</Link>
+            <Link to="/legal/terms" className="footer-link">Terms of Service</Link>
+            <Link to="/legal/security" className="footer-link">Security</Link>
           </div>
           <div className="flex flex-col gap-3">
             <span className="text-[11px] uppercase tracking-[0.1em] text-white font-bold mb-2 font-label">Connect</span>
             <a href="https://github.com/AmanJ24/entrustory" target="_blank" rel="noopener noreferrer" className="footer-link">GitHub</a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="footer-link">Twitter / X</a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="footer-link">LinkedIn</a>
+            <a href="https://linkedin.com/in/aman-jangir" target="_blank" rel="noopener noreferrer" className="footer-link">LinkedIn</a>
           </div>
         </div>
       </footer>

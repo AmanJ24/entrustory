@@ -72,6 +72,13 @@ export interface ApiKey {
   created_at: string;
 }
 
+export interface UptimeCheck {
+  id: string;
+  checked_at: string;
+  status: 'operational' | 'degraded' | 'down';
+  latency_ms: number;
+}
+
 export interface BlockchainAnchor {
   id: string;
   super_merkle_root: string;

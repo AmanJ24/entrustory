@@ -3,9 +3,10 @@
  * Shows real-time metrics about the Entrustory infrastructure.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../utils/supabase';
+import { fetchUptimeSummary, type DayStatus } from '../../utils/uptimeStats';
 import {
   ShieldCheck, Activity, Database, CheckCircle,
   Server, Wifi, BarChart3
@@ -23,8 +24,16 @@ export const StatusPage = () => {
   const [metrics, setMetrics] = useState<HealthMetric[]>([]);
   const [totalProofs, setTotalProofs] = useState(0);
   const [lastAnchor, setLastAnchor] = useState<string | null>(null);
-  const [uptime] = useState(99.98);
+  const [uptime, setUptime] = useState<number | null>(null);
+  const [dailyBars, setDailyBars] = useState<DayStatus[]>(Array(90).fill('no-data'));
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUptimeSummary().then((s) => {
+      setUptime(s.uptimePct);
+      setDailyBars(s.dailyBars);
+    });
+  }, []);
 
   useEffect(() => {
     const checkHealth = async () => {
@@ -120,13 +129,6 @@ export const StatusPage = () => {
     }
   };
 
-  // Generate fake 90-day uptime bars
-  const uptimeBars = useMemo(() => Array.from({ length: 90 }, (_, i) => {
-    const rand = Math.random();
-    if (i > 85) return rand > 0.05 ? 'operational' : 'degraded';
-    return rand > 0.02 ? 'operational' : rand > 0.005 ? 'degraded' : 'down';
-  }), []);
-
   return (
     <div className="min-h-screen bg-surface text-on-surface font-['Inter']">
       {/* Header */}
@@ -165,7 +167,7 @@ export const StatusPage = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           <div className="bg-surface-container-low border border-surface-variant rounded-xl p-4 text-center">
             <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-1">Uptime (90d)</p>
-            <p className="text-2xl font-bold text-emerald-400">{uptime}%</p>
+            <p className="text-2xl font-bold text-emerald-400">{uptime === null ? '—' : `${uptime}%`}</p>
           </div>
           <div className="bg-surface-container-low border border-surface-variant rounded-xl p-4 text-center">
             <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-1">Avg Latency</p>
@@ -224,18 +226,19 @@ export const StatusPage = () => {
         <div className="bg-surface-container-low border border-surface-variant rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">90-Day Uptime</h3>
-            <span className="text-xs text-emerald-400 font-bold">{uptime}%</span>
+            <span className="text-xs text-emerald-400 font-bold">{uptime === null ? '—' : `${uptime}%`}</span>
           </div>
           <div className="flex gap-[2px] h-8">
-            {uptimeBars.map((status, i) => (
+            {dailyBars.map((status, i) => (
               <div
                 key={i}
                 className={`flex-1 rounded-sm transition-colors ${
                   status === 'operational' ? 'bg-emerald-500/60 hover:bg-emerald-500' :
                   status === 'degraded' ? 'bg-amber-500/60 hover:bg-amber-500' :
-                  'bg-red-500/60 hover:bg-red-500'
+                  status === 'down' ? 'bg-red-500/60 hover:bg-red-500' :
+                  'bg-surface-variant/40'
                 }`}
-                title={`Day ${90 - i}: ${status}`}
+                title={`Day ${90 - i}: ${status === 'no-data' ? 'no data yet' : status}`}
               />
             ))}
           </div>
@@ -243,6 +246,9 @@ export const StatusPage = () => {
             <span>90 days ago</span>
             <span>Today</span>
           </div>
+          <p className="mt-4 text-[11px] text-on-surface-variant/60">
+            Logged automatically every 30 minutes. Gray bars are days before tracking started — no history is backfilled.
+          </p>
         </div>
       </main>
 
